@@ -5,10 +5,20 @@
 #include "crsf_telemetrie.h"
 
 
-#define LOWTILT 0
-#define HIGHTILT 90
-#define LOWPAN  0
-#define HIGHPAN 360
+#define LOWTILT     0
+#define HIGHTILT    90
+#define LOWPAN      0
+#define HIGHPAN     360
+
+#define LOWTILT_PWM     1200
+#define HIGHTILT_PWM    1800
+#define LOWPAN_PWM      1000
+#define HIGHPAN_PWM     2000
+#define CENTERPAN       ((HIGHPAN-LOWPAN) / 2)
+#define CENTERTILT      ((HIGHTILT-LOWTILT) / 2)
+
+#define MINSATELITES    (4) // 4 is for indoor testing
+
 
 class tracker
 {
@@ -18,8 +28,8 @@ private:
     gps plane;
     bool update;
     bool HomeIsSet = false;
-    int16_t i16pan;
-    int16_t i16tilt;
+    int16_t i16pan = CENTERPAN;
+    int16_t i16tilt = CENTERTILT;
     int16_t i16panzero = 0;
     int16_t i16tiltzero = 0;
     
