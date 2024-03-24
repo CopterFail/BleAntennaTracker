@@ -49,7 +49,9 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
             i16tilt = 45; //hoehe????
         }
 
-    if( i16pan < 0 ) i16pan += 360;
+    if( i16pan < 0 ) i16pan += 360; /* format is 0..360 degree */
+    if ( i16tilt < 0 ) i16tilt +=360;
+    
     if( i16tilt < LOWTILT )  i16tilt = LOWTILT;
     if( i16tilt > HIGHTILT )  i16tilt = HIGHTILT;
     if( i16pan < LOWPAN )  i16pan = LOWPAN;
@@ -73,4 +75,10 @@ int16_t tracker::getPan( void )
 int16_t tracker::getTilt( void )
 {
     return i16tilt;
+}
+
+void tracker::setZero( int16_t i16pan, int16_t i16tilt )
+{
+    i16panzero = i16pan;
+    i16tiltzero = i16tilt;
 }

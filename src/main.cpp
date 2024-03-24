@@ -84,9 +84,10 @@ void tracker_loop( void )
     i16tilt = mycrsf.getChannel(1);
     if( mycrsf.getChannel(3) > 1900 )
     {
-        i16North = i16pan - 1500;
-        i16Horizontal = i16tilt - 1500;
+        i16North = i16pan;
+        i16Horizontal = i16tilt;
         Serial.println("Zeropoint: " + String(i16North) + "/" + String(i16Horizontal));
+        mytracker.setZero( i16pan, i16tilt );
         //ToDo: save non volatile
         delay(500);
     }

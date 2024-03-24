@@ -21,7 +21,7 @@ public:
     gps( int32_t i32latitude, int32_t i32longitude, int8_t i8satelites=0 );
     ~gps();
 
-    gps diff( gps &b );
+    //gps diff( gps &b );
     float dist( gps &b);
     float degree( gps &b);
     void set( int32_t i32latitude, int32_t i32longitude, int8_t i8satelites=0 );

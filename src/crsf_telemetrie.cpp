@@ -175,6 +175,7 @@ bool crsf_telemetrie::readChannel( uint8_t* pData, size_t length )
 
     for(uint8_t i=0; i<CRSF_NUMBER_OF_CHANNELS; i++)
     {
+        //todo: avoid float
         channels[i] = float(CRSF_CHANNEL_MIN) + float(CRSF_CHANNELS_DIFFS_RATIO) * float(channels[i] - CRSF_RAW_CHANNEL_MIN) + 0.5;
 
         if(channels[i] < CRSF_CHANNEL_MIN) 
@@ -233,7 +234,7 @@ bool crsf_telemetrie::readVario( uint8_t* pData, size_t length )
 {
     bool result = false;
     i16altitude = (( pData[3]<<8 | pData[4] ) & 0xFFFF);
-#if 1
+#if 0
     Serial.print( "VARIO_FRAME: " );
     Serial.println( i16altitude );
 #endif

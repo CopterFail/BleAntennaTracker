@@ -10,7 +10,7 @@
 
 gps::gps()
 {
-    gps( 513676473, 67874330, 5 );
+    gps( 510000000, 67000000, 5 );
 }
 
 gps::gps( int32_t i32latitude, int32_t i32longitude, int8_t i8satelites )
@@ -29,11 +29,13 @@ void gps::set( int32_t i32latitude, int32_t i32longitude, int8_t i8satelites )
     i8sats = i8satelites;
 }
 
+#if 0
 gps gps::diff( gps &b )
 {
     //ToDo ? dx,dy , correction
     return;
 }
+#endif
 
 float gps::dist( gps &b)
 {

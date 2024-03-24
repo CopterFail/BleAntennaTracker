@@ -20,6 +20,9 @@ private:
     bool HomeIsSet = false;
     int16_t i16pan;
     int16_t i16tilt;
+    int16_t i16panzero = 0;
+    int16_t i16tiltzero = 0;
+    
 
 public:
     tracker(/* args */);
@@ -30,6 +33,7 @@ public:
     bool updateCalculation( crsf_telemetrie &crsf );
     int16_t getPan( void );
     int16_t getTilt( void );
+    void setZero( int16_t i16pan, int16_t i16tilt );
 };
 
 #endif
