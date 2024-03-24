@@ -29,9 +29,10 @@ void gps::set( int32_t i32latitude, int32_t i32longitude, int8_t i8satelites )
     i8sats = i8satelites;
 }
 
-gps diff( gps &b )
+gps gps::diff( gps &b )
 {
-    //ToDo ?
+    //ToDo ? dx,dy , correction
+    return;
 }
 
 float gps::dist( gps &b)
