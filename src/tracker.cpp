@@ -1,6 +1,7 @@
-
-
-
+/**
+ * BLE Anenna Tracker
+ * by CopterFail 2024
+*/
 
 #include <Arduino.h>
 #include "tracker.h"

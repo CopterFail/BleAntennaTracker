@@ -1,4 +1,7 @@
-
+/**
+ * GPS class
+ * by CopterFail 2024
+*/
 
 #include <cstdint>
 #include <cmath>

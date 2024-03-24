@@ -1,3 +1,8 @@
+/**
+ * CRSF Protocol definitions
+ * updated by CopterFail 2024
+*/
+
 #pragma once
 
 #include <cstdint>

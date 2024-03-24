@@ -1,3 +1,7 @@
+/**
+ * simple CRSF decoder by 
+ * CopterFail 2024
+*/
 
 #ifndef MAIN_CRSF_TELEMETRIE_H_
 #define MAIN_CRSF_TELEMETRIE_H_

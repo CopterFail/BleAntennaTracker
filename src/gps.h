@@ -1,3 +1,8 @@
+/**
+ * GPS class
+ * by CopterFail 2024
+*/
+
 #ifndef class_gps
 #define class_gps
 

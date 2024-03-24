@@ -1,4 +1,9 @@
 
+/**
+ * simple CRSF decoder by 
+ * CopterFail 2024
+*/
+
 #include <stdio.h>
 
 #include <Arduino.h>
