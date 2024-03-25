@@ -24,6 +24,9 @@
 
 #define MINSATELITES    (4) // 4 is for indoor testing
 
+#define PANPIN  2
+#define TILTPIN 4
+
 
 class tracker
 {
@@ -43,12 +46,15 @@ public:
     tracker(/* args */);
     ~tracker();
 
+    void setup( void );
+    void loop( crsf_telemetrie &crsf );
     void setHome( gps h );
     void setPlane( gps p );
     bool updateCalculation( crsf_telemetrie &crsf );
     int16_t getPan( void );
     int16_t getTilt( void );
     void setZero( int16_t i16pan, int16_t i16tilt );
+    void setServos( int16_t i16pan, int16_t i16tilt );
 };
 
 #endif
