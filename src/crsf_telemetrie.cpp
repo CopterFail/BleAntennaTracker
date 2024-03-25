@@ -278,6 +278,6 @@ bool crsf_telemetrie::getLatestGps( gps &p )
 {
     bool result = bGpsUpdate;
     bGpsUpdate = false;
-    p.set( i32latitude,i32longitude, i8numberofsats );
+    p.set( i32latitude,i32longitude, i8numberofsats, i16altitude );
     return result;
 }

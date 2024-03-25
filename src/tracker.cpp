@@ -41,36 +41,29 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
         }
         else
         {
-            i16pan = (int16_t)(home.degree( plane ) / M_PI * 180.0);
+            i16pan = (int16_t)((home.degree( plane ) + M_PI) / M_PI * 180.0); /* range is [0;360] */
             i16pan += i16panzero;
+            i16tilt = home.tilt( plane );
             i16tilt += i16tiltzero;
             distance = home.dist( plane );
-            i16tilt = 45; //hoehe????
 
+            if( i16pan < -20 ) i16pan += 360; /* format is 0..359 degree , -20 degree overlap */
+            if( i16pan >= 360 + 20) i16pan -= 360; /* format is 0..359 degree , + 20 degree overlap */
+
+            if( i16tilt < LOWTILT )  i16tilt = LOWTILT;
+            if( i16tilt > HIGHTILT )  i16tilt = HIGHTILT;
+            if( i16pan < LOWPANLIMIT )  i16pan = LOWPANLIMIT;
+            if( i16pan > HIGHPANLIMIT )  i16pan = HIGHPANLIMIT;
 
             //Serial.println( "home: " + String(home.getLat()) + "/" + String(home.getLon()) );
             //Serial.println( "plane: " + String(plane.getLat()) + "/" + String(plane.getLon()) );
-            Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan));
-        }
+            Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan) + " Tilt:" + String(i16tilt));
 
-
-    if( i16pan < -20 ) i16pan += 360; /* format is 0..359 degree , -20 degree overlap */
-    if( i16pan >= 380 ) i16pan -= 360; /* format is 0..359 degree , + 20 degree overlap */
-    if ( i16tilt < 0 ) i16tilt +=360;
-    if ( i16tilt >= 360 ) i16tilt -=360;
-
-    if( i16tilt < LOWTILT )  i16tilt = LOWTILT;
-    if( i16tilt > HIGHTILT )  i16tilt = HIGHTILT;
-    if( i16pan < LOWPANLIMIT )  i16pan = LOWPANLIMIT;
-    if( i16pan > HIGHPANLIMIT )  i16pan = HIGHPANLIMIT;
-
-
-    i16pan = map( i16pan, LOWPAN, HIGHPAN, LOWPAN_PWM, HIGHPAN_PWM);
-    i16tilt = map( i16tilt, LOWTILT, HIGHTILT, LOWTILT_PWM, HIGHTILT_PWM );
+            i16pan = map( i16pan, LOWPAN, HIGHPAN, LOWPAN_PWM, HIGHPAN_PWM);
+            i16tilt = map( i16tilt, LOWTILT, HIGHTILT, LOWTILT_PWM, HIGHTILT_PWM );
     
+        }
     }    
-
-
     return result;
 }
 
