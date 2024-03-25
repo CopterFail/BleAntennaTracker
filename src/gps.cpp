@@ -66,7 +66,8 @@ float gps::tilt( gps &b )
 
     dx = float( b.i32altitude - i32altitude );
     dy = dist( b );
-    grad = asinf(dx/dy);
+    if( fabsf(dy) < 0.01 ) dy = 0.01;
+    grad = asinf(dx/dy); /* results in [-pi:+pi] */
     return grad;
 }
 

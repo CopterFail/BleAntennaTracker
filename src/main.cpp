@@ -82,6 +82,7 @@ void tracker_loop( void )
   {
     i16pan = mycrsf.getChannel(0);
     i16tilt = mycrsf.getChannel(1);
+    SetServos( i16pan, i16tilt );
     if( mycrsf.getChannel(3) > 1900 )
     {
         i16North = i16pan;
@@ -95,8 +96,8 @@ void tracker_loop( void )
   {
     i16pan = mytracker.getPan();
     i16tilt = mytracker.getTilt();
+    SetServos( i16pan, i16tilt );
   }
-  SetServos( i16pan, i16tilt );
 }
 
 void setup() 
