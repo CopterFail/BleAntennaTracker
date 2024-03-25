@@ -4,7 +4,7 @@
 */
 
 #include <Arduino.h>
-#include <ESP32Servo.h>
+#include "PWM.h"
 
 
 #include "BLEDevice.h"
@@ -14,11 +14,12 @@
 
 #include "BLE_client.h"
 
+
+
 #define PANPIN  2
 #define TILTPIN 4
 
-Servo panservo;
-Servo tiltservo;
+PWMController PWM;
 tracker mytracker;
 crsf_telemetrie mycrsf;
 
@@ -28,6 +29,9 @@ void tracker_loop( void );
 
 int16_t i16North;
 int16_t i16Horizontal;
+
+pwm_channel_t chPan, chTilt;
+
 
 void notifyCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic,
@@ -48,14 +52,10 @@ void notifyCallback(
 }
 
 void SetServos( int ipan, int itilt) {
-	panservo.writeMicroseconds(ipan); // resolution is 20us
-	tiltservo.writeMicroseconds(itilt);
-#if 0
-    // this shows the resolution is 20us :(
-    String newValue = String(ipan) + "/" + String(panservo.readMicroseconds());
-    Serial.println("PWM: " + newValue);
-#endif
+  PWM.setMicroseconds( chPan, ipan );
+  PWM.setMicroseconds( chTilt, itilt );
 }
+
 
 void tracker_setup( void ) 
 {
@@ -64,14 +64,14 @@ void tracker_setup( void )
   i16North = 0;
   i16Horizontal = 0;
 
-   // Init the 2 servos
-  ESP32PWM::allocateTimer(3);
-  //ESP32PWM::setTimerWidth(20); // ab welcher version der lib?
-  //readTimerWidth();
-  panservo.setPeriodHertz(50); // standard 50 hz servo
-  panservo.attach(PANPIN, 1000, 2000); // Attach the servo after it has been detatched
-  tiltservo.setPeriodHertz(50); // standard 50 hz servo
-  tiltservo.attach(TILTPIN, 1000, 2000); // Attach the servo after it has been detatched
+   // Init the 2 servo pwm channels
+  chPan = PWM.allocate( PANPIN, 50 ); 
+  PWM.setDuty( chPan, 20000 );  // 20ms duty
+  chTilt = PWM.allocate( TILTPIN, 50 ); 
+  PWM.setDuty( chTilt, 20000 );  // 20ms duty
+  
+  //PWM.setMicroseconds( chPan, 1500 ); // intial value?
+  //PWM.setMicroseconds( chTilt, 1500 ); // intial value?
 }
 
 void tracker_loop( void ) 

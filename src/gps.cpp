@@ -59,3 +59,13 @@ float gps::degree( gps &b)
     return grad;
 }
 
+float gps::tilt( pgs &b )
+{
+    float dx,dy,grad;
+
+    dx = float( b.i32altitude - i32altitude );
+    dy = dist( b );
+    grad = asinf(dx/dy);
+    return grad;
+}
+

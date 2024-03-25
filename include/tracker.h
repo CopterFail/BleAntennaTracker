@@ -10,10 +10,15 @@
 #define LOWPAN      0
 #define HIGHPAN     360
 
-#define LOWTILT_PWM     1200
-#define HIGHTILT_PWM    1800
-#define LOWPAN_PWM      1000
-#define HIGHPAN_PWM     2000
+#define LOWTILT_PWM     1000
+#define HIGHTILT_PWM    2000
+#define LOWPAN_PWM      (1500-338)
+#define HIGHPAN_PWM     (1500+338)
+
+#define LOWPANLIMIT     (-20)
+#define HIGHPANLIMIT    (+380)
+
+
 #define CENTERPAN       ((HIGHPAN-LOWPAN) / 2)
 #define CENTERTILT      ((HIGHTILT-LOWTILT) / 2)
 
