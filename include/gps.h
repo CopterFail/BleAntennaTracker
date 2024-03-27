@@ -13,12 +13,11 @@ class gps
 {
 private:
     /* data */
-    int32_t i32altitude;
-    int32_t i32lat;
-    int32_t i32lon;
-    int32_t i32alt;
-    int8_t i8sats;
-    
+    int32_t i32lat;         /* latitude in [degree * 1e7] */
+    int32_t i32lon;         /* longitute in [degree * 1e7 ] */
+    int32_t i32alt;         /* altitude in [m], offset is 1000 ? */
+    int8_t i8sats;          /* number of received satelites */
+    /* groundSpeed [km/h *10], groundCourse [degree * 1e2]*/
 public:
     gps();
     gps( int32_t i32latitude, int32_t i32longitude, int8_t i8satelites=0, int32_t i32altitude=0 );

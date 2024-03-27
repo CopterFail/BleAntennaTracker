@@ -5,18 +5,18 @@
 #include "crsf_telemetrie.h"
 
 
-#define LOWTILT     0
-#define HIGHTILT    90
-#define LOWPAN      0
-#define HIGHPAN     360
+#define LOWTILT     (+0)    /* [degree * 0.1]*/
+#define HIGHTILT    (+900)
+#define LOWPAN      (-1800)
+#define HIGHPAN     (+1800)
 
-#define LOWTILT_PWM     1000
-#define HIGHTILT_PWM    2000
+#define LOWTILT_PWM     (1000)
+#define HIGHTILT_PWM    (2000)
 #define LOWPAN_PWM      (1500-338)
 #define HIGHPAN_PWM     (1500+338)
 
-#define LOWPANLIMIT     (-20)
-#define HIGHPANLIMIT    (+380)
+//#define LOWPANLIMIT     (-1800) 
+//#define HIGHPANLIMIT    (+1800)
 
 
 #define CENTERPAN       ((HIGHPAN-LOWPAN) / 2)

@@ -94,22 +94,26 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
         }
         else
         {
-            i16pan = (int16_t)((home.degree( plane ) + M_PI) / M_PI * 180.0); /* range is [0;360] */
-            i16pan += i16panzero;
-            i16tilt = home.tilt( plane );
+            i16pan = (int16_t)(home.degree( plane ) * (1800.0/M_PI)); /* range is [-2700;+900] */
+            i16pan += i16panzero; /* add offset, check the limits? */
+            i16tilt = home.tilt( plane ) * (1800.0/M_PI); /* range is [0;900]*/
             i16tilt += i16tiltzero;
             distance = home.dist( plane );
 
-            if( i16pan < -20 ) i16pan += 360; /* format is 0..359 degree , -20 degree overlap */
-            if( i16pan >= 360 + 20) i16pan -= 360; /* format is 0..359 degree , + 20 degree overlap */
+            /* overlap will not work to code hysteresis */
+            if( i16pan < -1800 ) i16pan += 3600; /* set range to [-1800..1800] degree * 0.1 */
+            if( i16pan < -1800 ) i16pan += 3600;
+            if( i16pan >= +1800 ) i16pan -= 3600; 
 
             if( i16tilt < LOWTILT )  i16tilt = LOWTILT;
             if( i16tilt > HIGHTILT )  i16tilt = HIGHTILT;
-            if( i16pan < LOWPANLIMIT )  i16pan = LOWPANLIMIT;
-            if( i16pan > HIGHPANLIMIT )  i16pan = HIGHPANLIMIT;
+            if( i16pan < LOWPAN )  i16pan = LOWPAN;
+            if( i16pan > HIGHPAN )  i16pan = HIGHPAN;
 
-            //Serial.println( "home: " + String(home.getLat()) + "/" + String(home.getLon()) );
-            //Serial.println( "plane: " + String(plane.getLat()) + "/" + String(plane.getLon()) );
+#if 0
+            Serial.println( "home: " + String(home.getLat()) + "/" + String(home.getLon()) );
+            Serial.println( "plane: " + String(plane.getLat()) + "/" + String(plane.getLon()) );
+#endif
             Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan) + " Tilt:" + String(i16tilt));
 
             i16pan = map( i16pan, LOWPAN, HIGHPAN, LOWPAN_PWM, HIGHPAN_PWM);

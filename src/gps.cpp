@@ -54,9 +54,10 @@ float gps::degree( gps &b)
 {
     float dx,dy,grad;
 
-    dx = (71500.0 / 1.0e7) * float(i32lon - b.i32lon);
-    dy = (111300.0 / 1.0e7) * float(i32lat - b.i32lat);
-    grad = atan2f(dy,dx); /* result is [-pi;+pi] */
+    dx = 71500.0 * float(i32lon - b.i32lon);  /* dx is positiv for moving east, negativ for moving west */
+    dy = 111300.0 * float(i32lat - b.i32lat); /* dy is positiv for moving north, negativ for moving south */
+    grad = atan2f(dy,dx); /* result is [-pi;+pi] , result is  0 for (E), +PI/4 for (NE), +PI/2 for (N), +3/4 PI for (NW), +-PI for [W], -3/4 PI for (SW), -PI/2 for (S), -PI/4 for (SE), 0 for (E) */
+    grad -= M_PI_2; /* set the angle for north to 0. It becomes negative for clockwise turn, positive for aniclockwise turn. Range is now [-3/2*PI;+1/*PI] */
     return grad;
 }
 
@@ -64,7 +65,7 @@ float gps::tilt( gps &b )
 {
     float dx,dy,grad;
 
-    dx = float( b.i32altitude - i32altitude );
+    dx = float( b.i32alt - i32alt );
     dy = dist( b );
     if( fabsf(dy) < 0.01 ) dy = 0.01;
     grad = asinf(dx/dy); /* results in [-pi:+pi] */
