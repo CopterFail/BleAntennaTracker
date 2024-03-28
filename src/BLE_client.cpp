@@ -26,6 +26,7 @@ static boolean doScan = false;
 static BLERemoteCharacteristic* pRemoteCharacteristic;
 static BLEAdvertisedDevice* myDevice;
 
+static void BLE_scan( void );
 
 void notifyCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic,
@@ -56,8 +57,16 @@ bool connectToServer()
     pClient->setClientCallbacks(new MyClientCallback());
 
     // Connect to the remove BLE Server.
-    pClient->connect(myDevice);  // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
-    Serial.println(" - Connected to server");
+    //pClient->connect(myDevice);  // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
+    //Serial.println(" - Connected to server");
+    if( true == pClient->connect(myDevice) )  // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
+    {
+      Serial.println(" - Connected to server");
+    }else{
+      Serial.println("Failed to onnected to server");
+      pClient->disconnect();
+      return false;
+    }
 
     // Obtain a reference to the service we are after in the remote BLE server.
     BLERemoteService* pRemoteService = pClient->getService(serviceUUID);
@@ -116,6 +125,28 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
   } // onResult
 }; // MyAdvertisedDeviceCallbacks
 
+
+static void BLE_scan( void )
+{
+  // Retrieve a Scanner and set the callback we want to use to be informed when we
+  // have detected a new device.  Specify that we want active scanning and start the
+  // scan to run for 5 seconds.
+  Serial.println("scan BLE ...");
+  BLEScan* pBLEScan = BLEDevice::getScan();
+  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  pBLEScan->setInterval(1349);
+  pBLEScan->setWindow(449);
+  pBLEScan->setActiveScan(true);
+  pBLEScan->start(5, false);  // scan 5s, 
+  Serial.println("... End of BLE scan");
+  if( doConnect )
+  {
+    Serial.println("doConnect is true" );
+  }else{
+    Serial.println("doConnect is false");
+  }
+}
+
 void BLE_setup( void ) 
 {
  
@@ -125,22 +156,13 @@ void BLE_setup( void )
   BLEDevice::setMTU( BLEDevice::getMTU() + 3 );
   Serial.println(String(BLEDevice::getMTU()).c_str());
 
-  // Retrieve a Scanner and set the callback we want to use to be informed when we
-  // have detected a new device.  Specify that we want active scanning and start the
-  // scan to run for 5 seconds.
-  BLEScan* pBLEScan = BLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setInterval(1349);
-  pBLEScan->setWindow(449);
-  pBLEScan->setActiveScan(true);
-  pBLEScan->start(5, false);
+  BLE_scan();
 
-  Serial.println("... End of setup");
 } // End of setup.
 
 
 // This is the Arduino main loop function.
-void BLE_loop( void ) 
+bool BLE_loop( void ) 
 {
 
   // If the flag "doConnect" is true then we have scanned for and found the desired
@@ -150,7 +172,7 @@ void BLE_loop( void )
     if (connectToServer()) {
       Serial.println("We are now connected to the BLE Server.");
     } else {
-      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+      Serial.println("We have failed to connect to the server; there is nothing more we will do.");
     }
     doConnect = false;
   }
@@ -163,8 +185,12 @@ void BLE_loop( void )
     
     // Set the characteristic's value to be the array of bytes that is actually a string.
     pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
-  }else if(doScan){
-    BLEDevice::getScan()->start(0);  // this is just eample to start scan after disconnect, most likely there is better way to do it in arduino
+//  }else if(doScan){
+  }else {
+    //BLEDevice::getScan()->start(0);  // this is just sample to start scan after disconnect, most likely there is better way to do it in arduino
+    BLE_scan();
   }
+
+  return connected;
 } // End of loop
 

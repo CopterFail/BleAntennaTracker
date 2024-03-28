@@ -4,7 +4,7 @@
 
 
 void BLE_setup( void );
-void BLE_loop( void );
+bool BLE_loop( void );
 
 
 #endif

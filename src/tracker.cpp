@@ -46,7 +46,7 @@ void  tracker::setup( void )
   preferences.end();
 
   HomeIsSet = (home.getLat() != 0 ) && (home.getLon() != 0 );
-  Serial.println( "home: " + String(home.getLat()) + "/" + String(home.getLon()) );
+  Serial.println( "Home: " + String(home.getLat()) + "/" + String(home.getLon()) );
 
    // Init the 2 servo pwm channels
   chPan = PWM.allocate( PANPIN, 50 ); 

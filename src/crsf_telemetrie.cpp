@@ -78,6 +78,8 @@ bool crsf_telemetrie::parseData( uint8_t* pData, size_t length, bool isNotify)
         case CRSF_FRAMETYPE_FLIGHT_MODE:
             result = readFlightMode(pData, length );
             break;
+        default:
+            Serial.println("unhandled CRSF frame:" + String(pData[CRSF_TELEMETRY_TYPE_INDEX]));        
             /* ignore */
             break;
         }
@@ -173,6 +175,7 @@ bool crsf_telemetrie::readChannel( uint8_t* pData, size_t length )
     channels[10] = ((pData[16] >> 6 | pData[17] << 2 | pData[18] << 10 ) & 0x07FF);
     channels[11] = ((pData[18] >> 1 | pData[19] << 7                     ) & 0x07FF);
 
+
     for(uint8_t i=0; i<CRSF_NUMBER_OF_CHANNELS; i++)
     {
         //todo: avoid float
@@ -191,7 +194,7 @@ bool crsf_telemetrie::readChannel( uint8_t* pData, size_t length )
 
 #if 0
     Serial.print( "CHANNEL_FRAME: " );
-    //dumpData( pData, length );
+    dumpData( pData, length );
     Serial.print( String(channels[0]) + " " );
     Serial.print( String(channels[1]) + " " );
     Serial.print( String(channels[3]) + " " );

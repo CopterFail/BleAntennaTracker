@@ -55,11 +55,12 @@ void setup()
 
   BLE_setup();
   mytracker.setup();
+  Serial.println("... End of setup");
 }
 
 void loop() 
 {
-  BLE_loop();
-  mytracker.loop( mycrsf );
+  if( BLE_loop() )
+    mytracker.loop( mycrsf );
   delay(50);
 }
