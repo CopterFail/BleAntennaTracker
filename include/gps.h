@@ -31,6 +31,8 @@ public:
     int8_t getSatelites( void ) {return i8sats; }
     int32_t getLat( void ) {return i32lat; }
     int32_t getLon( void ) {return i32lon; }
+    void setLat( int32_t i32latitude ) { i32lat = i32latitude; }
+    void setLon( int32_t i32longitude ) { i32lon = i32longitude; }
 };
 
 #endif

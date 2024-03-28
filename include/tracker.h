@@ -48,12 +48,12 @@ public:
 
     void setup( void );
     void loop( crsf_telemetrie &crsf );
-    void setHome( gps h );
-    void setPlane( gps p );
+    void setHome( gps &h );
+    void setPlane( gps &p );
     bool updateCalculation( crsf_telemetrie &crsf );
     int16_t getPan( void );
     int16_t getTilt( void );
-    void setZero( int16_t i16pan, int16_t i16tilt );
+    void setZero( int16_t i16pan, int16_t i16tilt, bool bStore );
     void setServos( int16_t i16pan, int16_t i16tilt );
 };
 
