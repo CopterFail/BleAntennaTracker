@@ -61,16 +61,20 @@ void  tracker::setup( void )
 
 void  tracker::loop( crsf_telemetrie &crsf )
 {
-  static int16_t i16pan = 1500, i16tilt = 1500;
+
+  (void)readNorth();
 
   if( crsf.getChannel(ARM_CHANNEL) < 1200 )
   {
-    i16pan = crsf.getChannel(PAN_CHANNEL);
-    i16tilt = crsf.getChannel(TILT_CHANNEL);
-    setServos( i16pan, i16tilt );
+    // overwrite the pwm values:
+    //i16panpwm = crsf.getChannel(PAN_CHANNEL);
+    i16panpwm = getPanPwm( i16panzero );
+    i16tiltpwm = crsf.getChannel(TILT_CHANNEL);
+    setServos( i16panpwm, i16tiltpwm );
+
     if( crsf.getChannel(OK_CHANNEL) > 1900 )
     {
-        setZero( i16pan, i16tilt, true );
+        //setZero( i16panpwm, i16tiltpwm, true );
     }
     if( crsf.getChannel(OK_CHANNEL) < 1200 )
     {
@@ -79,9 +83,9 @@ void  tracker::loop( crsf_telemetrie &crsf )
   }
   else if( updateCalculation( crsf ) )
   {
-    i16pan = getPan();
-    i16tilt = getTilt();
-    setServos( i16pan, i16tilt );
+    //i16pan = getPan();
+    //i16tilt = getTilt();
+    setServos( i16panpwm, i16tiltpwm );
   }
 
 }
@@ -90,6 +94,7 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
 {
     bool result = false;
     float distance = 0.0;
+    static int16_t i16GpsPacketCount = 11;
 
     if( crsf.getLatestGps( plane ) && plane.getSatelites() >= MINSATELITES )
     {
@@ -101,16 +106,30 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
         else
         {
             i16pan = (int16_t)(home.degree( plane ) * (1800.0/M_PI)); /* range is [-2700;+900] */
-            i16pan += i16panzero; /* add offset, check the limits? */
+            i16pan += i16panzero; /* add offset, i16panzero is in range [-1800;1800] -> [-4500;+2700]*/
             i16tilt = home.tilt( plane ) * (1800.0/M_PI); /* range is [0;900]*/
             i16tilt += i16tiltzero;
-            distance = home.dist( plane );
-
+            
             /* overlap will not work to code hysteresis */
-            if( i16pan < -1800 ) i16pan += 3600; /* set range to [-1800..1800] degree * 0.1 */
-            if( i16pan < -1800 ) i16pan += 3600;
-            if( i16pan >= +1800 ) i16pan -= 3600; 
+            if( i16GpsPacketCount > 10 )
+            {
+              if( i16pan < -1800 )
+              {
+                i16pan += 3600; /* set range to [-1800..1800] degree * 0.1 */
+                i16GpsPacketCount = 0;
+              }
+              if( i16pan >= +1800 )
+              {
+                i16pan -= 3600; 
+                i16GpsPacketCount = 0;
+              }
+            }
+            else
+            {
+              i16GpsPacketCount++;
+            }
 
+            // limit angles to the hardware range
             if( i16tilt < LOWTILT )  i16tilt = LOWTILT;
             if( i16tilt > HIGHTILT )  i16tilt = HIGHTILT;
             if( i16pan < LOWPAN )  i16pan = LOWPAN;
@@ -120,24 +139,29 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
             Serial.println( "home: " + String(home.getLat()) + "/" + String(home.getLon()) );
             Serial.println( "plane: " + String(plane.getLat()) + "/" + String(plane.getLon()) );
 #endif
+            distance = home.dist( plane );
             Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan) + " Tilt:" + String(i16tilt));
 
-            i16pan = map( i16pan, LOWPAN, HIGHPAN, LOWPAN_PWM, HIGHPAN_PWM);  /* swap to change direction? */
-            i16tilt = map( i16tilt, LOWTILT, HIGHTILT, LOWTILT_PWM, HIGHTILT_PWM );
-    
+            // calculate the servo output values
+            i16panpwm = getPanPwm( i16pan );
+            i16tiltpwm = getTiltPwm( i16tilt );
         }
-    }    
+    }   
     return result;
 }
 
-int16_t tracker::getPan( void )
+int16_t tracker::getPanPwm( int16_t i16Angle )
 {
-    return i16pan;
+    int16_t i16result;
+    i16result = map( i16Angle, LOWPAN, HIGHPAN, LOWPAN_PWM, HIGHPAN_PWM);  /* swap to change direction? */
+    return i16result;
 }
 
-int16_t tracker::getTilt( void )
+int16_t tracker::getTiltPwm( int16_t i16Angle )
 {
-    return i16tilt;
+    int16_t i16result;
+    i16result = map( i16Angle, LOWTILT, HIGHTILT, LOWTILT_PWM, HIGHTILT_PWM );
+    return i16result;
 }
 
 void tracker::setHome( gps &h )
@@ -184,4 +208,18 @@ void tracker::setServos( int16_t i16pan, int16_t i16tilt )
 {
   PWM.setMicroseconds( chPan, i16pan );
   PWM.setMicroseconds( chTilt, i16tilt );
+}
+
+int16_t tracker::readNorth( void )
+{
+      //I cannot use these functions:
+    //analogSetCycles(255);
+    //adcStart(POTIPIN);
+    //adcBusy(POTIPIN);
+    //resultadcEnd(POTIPIN);
+    static int valadc = 1700;
+    valadc = ( 2 * valadc + analogRead(POTIPIN)) / 3; // Poti value in in range of, 0..3510 (4092 is not reached)
+    i16panzero = map( valadc, 0, 3510, LOWPAN, HIGHPAN );
+    //Serial.println(i16panzero); // Wert ausgeben
+    return i16panzero;
 }

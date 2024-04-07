@@ -26,6 +26,8 @@
 
 #define PANPIN  2
 #define TILTPIN 4
+#define POTIPIN 34
+#define AKKUPIN 16
 
 
 class tracker
@@ -40,6 +42,8 @@ private:
     int16_t i16tilt = CENTERTILT;
     int16_t i16panzero = 0;
     int16_t i16tiltzero = 0;
+    int16_t i16panpwm = 1500;
+    int16_t i16tiltpwm = 1500;
     
 
 public:
@@ -51,10 +55,11 @@ public:
     void setHome( gps &h );
     void setPlane( gps &p );
     bool updateCalculation( crsf_telemetrie &crsf );
-    int16_t getPan( void );
-    int16_t getTilt( void );
+    int16_t getPanPwm( int16_t i16Angle );
+    int16_t getTiltPwm( int16_t i16Angle );
     void setZero( int16_t i16pan, int16_t i16tilt, bool bStore );
     void setServos( int16_t i16pan, int16_t i16tilt );
+    int16_t readNorth( void );
 };
 
 #endif

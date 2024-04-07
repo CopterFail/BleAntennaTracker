@@ -14,6 +14,19 @@
 
 
 
+#include <NeoPixelBus.h>
+const uint16_t PixelCount = 8; // this example assumes 4 pixels, making it smaller will cause a failure
+const uint8_t DotDataPin = 23;  
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, DotDataPin);
+
+#define colorSaturation 64 //128
+RgbColor red(colorSaturation, 0, 0);
+RgbColor green(0, colorSaturation, 0);
+RgbColor blue(0, 0, colorSaturation);
+RgbColor white(colorSaturation);
+RgbColor black(0);
+
+
 tracker mytracker;
 crsf_telemetrie mycrsf;
 
@@ -35,32 +48,40 @@ void notifyCallback(
 
 }
 
-void SetServos( int ipan, int itilt) {
-}
-
-
-void tracker_setup( void ) 
-{
-
-}
-
-void tracker_loop( void ) 
-{
-}
-
 void setup() 
 {
   Serial.begin(115200);
-  Serial.println("Starting BLE Client Antenna Tracker Application...");
+  Serial.println("Starting BLE Client Antenna Tracker Application V0.0.1");
 
   BLE_setup();
   mytracker.setup();
+
+
+  //strip.Begin(DotClockPin, DotDataPin, DotDataPin, DotChipSelectPin);
+  strip.Begin();
+  strip.ClearTo(black);   // this resets all the DotStars to an off state
+  strip.Show();
+
   Serial.println("... End of setup");
 }
 
 void loop() 
 {
   if( BLE_loop() )
+  {
     mytracker.loop( mycrsf );
+  }
+
+
+    strip.SetPixelColor(0, red);
+    strip.SetPixelColor(1, green);
+    strip.SetPixelColor(2, blue);
+    strip.SetPixelColor(3, white);
+    strip.SetPixelColor(4, red);
+    strip.SetPixelColor(5, green);
+    strip.SetPixelColor(6, blue);
+    strip.SetPixelColor(7, white);
+    strip.Show();
+
   delay(50);
 }
