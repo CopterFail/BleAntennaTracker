@@ -30,6 +30,13 @@ void gps::set( int32_t i32latitude, int32_t i32longitude, int8_t i8satelites, in
     i32alt = i32altitude;
 }
 
+void gps::simulate( gps &home, float a, float ang, float h )
+{
+    i32lon = home.getLon() - (int32_t)( a * 1e7 / 71500.0 * sinf(ang/180*M_PI) ); //dx
+    i32lat = home.getLat() + (int32_t)( a * 1e7 / 111300.0 * cosf(ang/180*M_PI) ); //dy
+    i32alt = (int32_t)h;
+}
+
 #if 0
 gps gps::diff( gps &b )
 {
@@ -57,7 +64,8 @@ float gps::degree( gps &b)
     dx = 71500.0 * float(i32lon - b.i32lon);  /* dx is positiv for moving east, negativ for moving west */
     dy = 111300.0 * float(i32lat - b.i32lat); /* dy is positiv for moving north, negativ for moving south */
     grad = atan2f(dy,dx); /* result is [-pi;+pi] , result is  0 for (E), +PI/4 for (NE), +PI/2 for (N), +3/4 PI for (NW), +-PI for [W], -3/4 PI for (SW), -PI/2 for (S), -PI/4 for (SE), 0 for (E) */
-    grad -= M_PI_2; /* set the angle for north to 0. It becomes negative for clockwise turn, positive for aniclockwise turn. Range is now [-3/2*PI;+1/*PI] */
+    grad += M_PI_2;
+    if( grad > M_PI ) grad -= 2 * M_PI;
     return grad;
 }
 

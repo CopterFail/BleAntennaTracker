@@ -4,6 +4,8 @@
 #include "gps.h"
 #include "crsf_telemetrie.h"
 
+#define SIMULATE
+
 
 #define LOWTILT     (+0)    /* [degree * 0.1]*/
 #define HIGHTILT    (+900)
@@ -27,7 +29,10 @@
 #define PANPIN  2
 #define TILTPIN 4
 #define POTIPIN 34
-#define AKKUPIN 16
+#define AKKUPIN 35
+
+#define AKKUFACTOR (10.7f)
+
 
 
 class tracker
@@ -60,6 +65,9 @@ public:
     void setZero( int16_t i16pan, int16_t i16tilt, bool bStore );
     void setServos( int16_t i16pan, int16_t i16tilt );
     int16_t readNorth( void );
+
+    void setStepper(  int16_t i16AngValue  );
+
 };
 
 #endif

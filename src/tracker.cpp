@@ -15,11 +15,61 @@
 #define OK_CHANNEL    3
 #define ARM_CHANNEL   4
 
+#define STEP_PIN 14
+#define DIR_PIN 12
+#define STEP_LIMIT 400
+
+
+
 PWMController PWM;
 pwm_channel_t chPan, chTilt;
 Preferences preferences;
 
 
+volatile int iStepperPos=0;
+volatile int iStepperSet=0;
+
+ 
+hw_timer_t * timer = NULL;      //H/W timer defining (Pointer to the Structure)
+
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
+void IRAM_ATTR onTimer() {      //Defining Inerrupt function with IRAM_ATTR for faster access
+  static bool state = true;
+  int diff;
+
+  if( state )
+  {
+    diff = iStepperSet - iStepperPos;
+    portENTER_CRITICAL_ISR(&timerMux);
+    if( (diff > 0) && (iStepperPos < +STEP_LIMIT) )
+    {
+      digitalWrite(DIR_PIN, HIGH );
+      digitalWrite(STEP_PIN, HIGH);
+      iStepperPos++;
+    }
+    else if( (diff < 0) && (iStepperPos > -STEP_LIMIT) ) 
+    {
+      digitalWrite(DIR_PIN, LOW );
+      digitalWrite(STEP_PIN, HIGH);
+      iStepperPos--;
+    }
+    else
+    {
+      digitalWrite(STEP_PIN, LOW);
+    }
+    state = false;
+    
+    portEXIT_CRITICAL_ISR(&timerMux);
+      
+  }
+  else
+  {
+      digitalWrite(STEP_PIN, LOW);
+      state = true;
+  } 
+}
+ 
 
 
 tracker::tracker(/* args */)
@@ -57,6 +107,16 @@ void  tracker::setup( void )
   // Set initial servo position, or wait for more information?
   //PWM.setMicroseconds( chPan, 1500 ); 
   //PWM.setMicroseconds( chTilt, 1500 ); 
+
+  pinMode( STEP_PIN, OUTPUT );
+  pinMode( DIR_PIN, OUTPUT );
+
+  timer = timerBegin(0, 80, true);           	// timer 0, prescalar: 80, UP counting
+  timerAttachInterrupt(timer, &onTimer, true); 	// Attach interrupt
+  timerAlarmWrite(timer, 1000, true);  		// Match value= 1000 for 1ms. delay.
+  timerAlarmEnable(timer);           			// Enable Timer with interrupt (Alarm Enable)
+
+
 }
 
 void  tracker::loop( crsf_telemetrie &crsf )
@@ -64,6 +124,7 @@ void  tracker::loop( crsf_telemetrie &crsf )
 
   (void)readNorth();
 
+#ifndef SIMULATE
   if( crsf.getChannel(ARM_CHANNEL) < 1200 )
   {
     // overwrite the pwm values:
@@ -81,11 +142,14 @@ void  tracker::loop( crsf_telemetrie &crsf )
         HomeIsSet = false;
     }
   }
-  else if( updateCalculation( crsf ) )
+  else 
+#endif  
+  if( updateCalculation( crsf ) )
   {
     //i16pan = getPan();
     //i16tilt = getTilt();
     setServos( i16panpwm, i16tiltpwm );
+    setStepper( i16pan );
   }
 
 }
@@ -96,8 +160,21 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
     float distance = 0.0;
     static int16_t i16GpsPacketCount = 11;
 
+#ifdef SIMULATE
+    static int16_t ang=0;
+    static int16_t height=0;
+    home.set(510000000, 67000000, 5, 0 );
+    HomeIsSet = true;
+    plane.simulate( home, 500, ang, height );
+    ang++;
+    height++;
+    if( ang > 180 ) ang -= 360;
+    else if( ang < -180 ) ang += 360;
+    if( true )
+#else    
     if( crsf.getLatestGps( plane ) && plane.getSatelites() >= MINSATELITES )
-    {
+#endif
+{
         result = true;
         if( !HomeIsSet )
         {
@@ -105,30 +182,14 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
         }
         else
         {
-            i16pan = (int16_t)(home.degree( plane ) * (1800.0/M_PI)); /* range is [-2700;+900] */
-            i16pan += i16panzero; /* add offset, i16panzero is in range [-1800;1800] -> [-4500;+2700]*/
+            i16pan = (int16_t)(home.degree( plane ) * (1800.0/M_PI)); /* range is [-1800;+1800] */
+            i16pan += i16panzero; /* add offset, i16panzero is in range [-1800;1800] -> [-3600;+3600]*/
+            if( i16pan < -1800 ) i16pan += 3600; /* set range to [-1800..1800] */
+            if( i16pan > +1800 ) i16pan -= 3600; 
+
             i16tilt = home.tilt( plane ) * (1800.0/M_PI); /* range is [0;900]*/
             i16tilt += i16tiltzero;
             
-            /* overlap will not work to code hysteresis */
-            if( i16GpsPacketCount > 10 )
-            {
-              if( i16pan < -1800 )
-              {
-                i16pan += 3600; /* set range to [-1800..1800] degree * 0.1 */
-                i16GpsPacketCount = 0;
-              }
-              if( i16pan >= +1800 )
-              {
-                i16pan -= 3600; 
-                i16GpsPacketCount = 0;
-              }
-            }
-            else
-            {
-              i16GpsPacketCount++;
-            }
-
             // limit angles to the hardware range
             if( i16tilt < LOWTILT )  i16tilt = LOWTILT;
             if( i16tilt > HIGHTILT )  i16tilt = HIGHTILT;
@@ -140,7 +201,7 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
             Serial.println( "plane: " + String(plane.getLat()) + "/" + String(plane.getLon()) );
 #endif
             distance = home.dist( plane );
-            Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan) + " Tilt:" + String(i16tilt));
+//            Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan) + " Tilt:" + String(i16tilt));
 
             // calculate the servo output values
             i16panpwm = getPanPwm( i16pan );
@@ -220,6 +281,23 @@ int16_t tracker::readNorth( void )
     static int valadc = 1700;
     valadc = ( 2 * valadc + analogRead(POTIPIN)) / 3; // Poti value in in range of, 0..3510 (4092 is not reached)
     i16panzero = map( valadc, 0, 3510, LOWPAN, HIGHPAN );
+i16panzero = 0;
+    float akku = AKKUFACTOR * 2.5 / 4096;
+    //Serial.println(akku * analogRead(AKKUPIN));
     //Serial.println(i16panzero); // Wert ausgeben
     return i16panzero;
 }
+
+
+
+
+
+
+void tracker::setStepper( int16_t i16AngValue )
+{
+ 
+  iStepperSet = map(i16AngValue, -1800,1800,-STEP_LIMIT,+STEP_LIMIT);
+  //Serial.println( String(i16pan) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
+}
+
+

@@ -26,7 +26,6 @@ RgbColor blue(0, 0, colorSaturation);
 RgbColor white(colorSaturation);
 RgbColor black(0);
 
-
 tracker mytracker;
 crsf_telemetrie mycrsf;
 
@@ -59,7 +58,7 @@ void setup()
 
   //strip.Begin(DotClockPin, DotDataPin, DotDataPin, DotChipSelectPin);
   strip.Begin();
-  strip.ClearTo(black);   // this resets all the DotStars to an off state
+  strip.ClearTo(black); 
   strip.Show();
 
   Serial.println("... End of setup");
@@ -67,11 +66,12 @@ void setup()
 
 void loop() 
 {
+  #ifndef SIMULATE
   if( BLE_loop() )
+  #endif
   {
     mytracker.loop( mycrsf );
   }
-
 
     strip.SetPixelColor(0, red);
     strip.SetPixelColor(1, green);
