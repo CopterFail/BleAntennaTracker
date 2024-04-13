@@ -175,11 +175,11 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
 
 #ifdef SIMULATE
     static float ang=0.0;
-    static int16_t height=0;
+    static int16_t height=-5;
     home.set(510000000, 67000000, 5, 0 );
     HomeIsSet = true;
     plane.simulate( home, 500, ang, height );
-//    ang+=2.0;
+    ang+=1;
     height++;
     if( ang > 180 ) ang -= 360;
     else if( ang < -180 ) ang += 360;
@@ -282,7 +282,7 @@ void tracker::setServos( int16_t i16pan, int16_t i16tilt )
 {
   PWM.setMicroseconds( chPan, i16pan );
   PWM.setMicroseconds( chTilt, i16tilt );
-  //Serial.println( String(i16pan) + " / " + String(i16tilt) ); 
+  Serial.println( String(i16pan) + " / " + String(i16tilt) ); 
 }
 
 int16_t tracker::readNorth( void )
@@ -301,11 +301,6 @@ int16_t tracker::readNorth( void )
     //Serial.println(i16panzero); // Wert ausgeben
     return i16panzero;
 }
-
-
-
-
-
 
 void tracker::setStepper( int16_t i16AngValue )
 {

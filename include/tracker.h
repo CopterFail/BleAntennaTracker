@@ -12,8 +12,9 @@
 #define LOWPAN      (-1800)
 #define HIGHPAN     (+1800)
 
+// PWM Values for double servo mechanic:
 #define LOWTILT_PWM     (1000)
-#define HIGHTILT_PWM    (2000)
+#define HIGHTILT_PWM    (1700)
 #define LOWPAN_PWM      (1500-338)
 #define HIGHPAN_PWM     (1500+338)
 

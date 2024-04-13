@@ -49,6 +49,14 @@ void notifyCallback(
 
 void setup() 
 {
+  //start LED at first
+  //strip.Begin(DotClockPin, DotDataPin, DotDataPin, DotChipSelectPin);
+  strip.Begin();
+  strip.ClearTo(black); 
+  strip.Show();
+  strip.SetPixelColor(0, red);
+  strip.Show();
+
   Serial.begin(115200);
   Serial.println("Starting BLE Client Antenna Tracker Application V0.0.1");
 
@@ -56,12 +64,7 @@ void setup()
   mytracker.setup();
 
 
-  //strip.Begin(DotClockPin, DotDataPin, DotDataPin, DotChipSelectPin);
-  strip.Begin();
-  strip.ClearTo(black); 
-  strip.Show();
-
-  Serial.println("... End of setup");
+   Serial.println("... End of setup");
 }
 
 void loop() 
