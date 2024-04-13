@@ -76,7 +76,7 @@ float gps::tilt( gps &b )
     dx = float( b.i32alt - i32alt );
     dy = dist( b );
     if( fabsf(dy) < 0.01 ) dy = 0.01;
-    grad = asinf(dx/dy); /* results in [-pi:+pi] */
+    grad = atan2f(dx,dy); /* results is [-pi:+pi] */
     return grad;
 }
 

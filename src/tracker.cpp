@@ -15,9 +15,17 @@
 #define OK_CHANNEL    3
 #define ARM_CHANNEL   4
 
-#define STEP_PIN 14
-#define DIR_PIN 12
-#define STEP_LIMIT (400*16) //counting micro steps and 1:4 gear
+// Stepper definitions
+#define STEP_PIN  14
+#define DIR_PIN   12
+#define FAST_PIN  13
+#define STEP_LIMIT (100*16*4)   // counting micro steps (1/16) and 1:4 gear for one direction
+#define FAST_FACTOR (4)       // quarter steps instead of 1/16
+#define MIN_INTERVAL  10000   // 100 Hz call frequency for new stepper values
+#define MIN_ISR_TIME  200     // 1000 Hz interrupt
+#define MAX_ISR_TIME  10000   // 100 Hz interrupt
+
+
 
 
 
@@ -28,6 +36,7 @@ Preferences preferences;
 
 volatile int iStepperPos=0;
 volatile int iStepperSet=0;
+volatile int iStepperFactor=1;
 
  
 hw_timer_t * timer = NULL;      //H/W timer defining (Pointer to the Structure)
@@ -46,15 +55,13 @@ void IRAM_ATTR onTimer() {      //Defining Inerrupt function with IRAM_ATTR for 
     {
       digitalWrite(DIR_PIN, HIGH );
       digitalWrite(STEP_PIN, HIGH);
-      iStepperPos++;
-      // iStepperPos+=4; check speedup
+      iStepperPos+= iStepperFactor;
     }
     else if( (diff < 0) && (iStepperPos > -STEP_LIMIT) ) 
     {
       digitalWrite(DIR_PIN, LOW );
       digitalWrite(STEP_PIN, HIGH);
-      iStepperPos--;
-      // iStepperPos-=4; for full steps
+      iStepperPos-= iStepperFactor;
     }
     else
     {
@@ -112,6 +119,7 @@ void  tracker::setup( void )
 
   pinMode( STEP_PIN, OUTPUT );
   pinMode( DIR_PIN, OUTPUT );
+  pinMode( FAST_PIN, OUTPUT );
 
   timer = timerBegin(0, 80, true);           	// timer 0, prescalar: 80, UP counting
   timerAttachInterrupt(timer, &onTimer, true); 	// Attach interrupt
@@ -171,7 +179,7 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
     home.set(510000000, 67000000, 5, 0 );
     HomeIsSet = true;
     plane.simulate( home, 500, ang, height );
-    ang+=0.5;
+//    ang+=2.0;
     height++;
     if( ang > 180 ) ang -= 360;
     else if( ang < -180 ) ang += 360;
@@ -206,7 +214,7 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
             Serial.println( "plane: " + String(plane.getLat()) + "/" + String(plane.getLon()) );
 #endif
             distance = home.dist( plane );
-//            Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan) + " Tilt:" + String(i16tilt));
+            Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan) + " Tilt:" + String(i16tilt));
 
             // calculate the servo output values
             i16panpwm = getPanPwm( i16pan );
@@ -274,6 +282,7 @@ void tracker::setServos( int16_t i16pan, int16_t i16tilt )
 {
   PWM.setMicroseconds( chPan, i16pan );
   PWM.setMicroseconds( chTilt, i16tilt );
+  //Serial.println( String(i16pan) + " / " + String(i16tilt) ); 
 }
 
 int16_t tracker::readNorth( void )
@@ -298,10 +307,6 @@ int16_t tracker::readNorth( void )
 
 
 
-#define MIN_INTERVAL  10000   // 100 Hz call frequency
-#define MIN_ISR_TIME  200     // 5000 Hz interrupt
-#define MAX_ISR_TIME  10000   // 100 Hz interrupt
-
 void tracker::setStepper( int16_t i16AngValue )
 {
   int ipos, iset, idiff;
@@ -309,6 +314,7 @@ void tracker::setStepper( int16_t i16AngValue )
   static unsigned long last = 0;
   unsigned long now;
   unsigned long interval;
+  bool bFast = false;
   
   static int16_t Value = i16AngValue;
   Value = (3 * Value + i16AngValue ) / 4; // filter i16AngValue
@@ -327,26 +333,36 @@ void tracker::setStepper( int16_t i16AngValue )
   interval = now - last;
   last = now;
   if( interval < MIN_INTERVAL ){
-    interval = MIN_INTERVAL;
+      interval = MIN_INTERVAL;
   }
-
 
   if( idiff > 0 ){
     isrtime = interval / idiff; 
     if( isrtime < MIN_ISR_TIME ){
-      isrtime = MIN_ISR_TIME;
+      isrtime *= FAST_FACTOR;
+      bFast = true;
+      if( isrtime < (MIN_ISR_TIME) ){   // use a longer isrtime with faster steps?
+        isrtime = MIN_ISR_TIME;
+      }
     }
     if( isrtime > MAX_ISR_TIME ){
       isrtime = MAX_ISR_TIME;
     }
 
+    if( bFast ){ 
+      digitalWrite(FAST_PIN, LOW);
+      iStepperFactor = FAST_FACTOR; // set full steps
+    }else{
+      digitalWrite(FAST_PIN, HIGH); // set quarter steps
+      iStepperFactor = 1;
+    }
     iStepperSet = iset;
     timerAlarmWrite(timer, isrtime, true);  		
     timerAlarmEnable(timer);
+    
+    //Serial.println( String(interval/idiff) + " / " + String(isrtime) + " / " + String(iStepperFactor) ); 
+    //Serial.println( String(i16pan) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
   }
-  
-  //Serial.println( String(interval) + " / " + String(isrtime) ); 
-  //Serial.println( String(i16pan) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
 }
 
 
