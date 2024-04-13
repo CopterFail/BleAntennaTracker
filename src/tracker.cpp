@@ -17,7 +17,7 @@
 
 #define STEP_PIN 14
 #define DIR_PIN 12
-#define STEP_LIMIT 400
+#define STEP_LIMIT (400*16) //counting micro steps and 1:4 gear
 
 
 
@@ -47,12 +47,14 @@ void IRAM_ATTR onTimer() {      //Defining Inerrupt function with IRAM_ATTR for 
       digitalWrite(DIR_PIN, HIGH );
       digitalWrite(STEP_PIN, HIGH);
       iStepperPos++;
+      // iStepperPos+=4; check speedup
     }
     else if( (diff < 0) && (iStepperPos > -STEP_LIMIT) ) 
     {
       digitalWrite(DIR_PIN, LOW );
       digitalWrite(STEP_PIN, HIGH);
       iStepperPos--;
+      // iStepperPos-=4; for full steps
     }
     else
     {
@@ -113,7 +115,7 @@ void  tracker::setup( void )
 
   timer = timerBegin(0, 80, true);           	// timer 0, prescalar: 80, UP counting
   timerAttachInterrupt(timer, &onTimer, true); 	// Attach interrupt
-  timerAlarmWrite(timer, 1000, true);  		// Match value= 1000 for 1ms. delay.
+  timerAlarmWrite(timer, 1000, true);  		// Match value= 1000 for 1ms, 100 for 0.1ms. delay.
   timerAlarmEnable(timer);           			// Enable Timer with interrupt (Alarm Enable)
 
 
@@ -129,9 +131,12 @@ void  tracker::loop( crsf_telemetrie &crsf )
   {
     // overwrite the pwm values:
     //i16panpwm = crsf.getChannel(PAN_CHANNEL);
-    i16panpwm = getPanPwm( i16panzero );
+    //i16panpwm = getPanPwm( i16panzero );
+    //i16panpwm = crsf.getChannel(PAN_CHANNEL);
     i16tiltpwm = crsf.getChannel(TILT_CHANNEL);
     setServos( i16panpwm, i16tiltpwm );
+    //setStepper( ((float)i16panpwm-1500.0)*(1800/500) );
+  setStepper( i16panzero );
 
     if( crsf.getChannel(OK_CHANNEL) > 1900 )
     {
@@ -161,12 +166,12 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
     static int16_t i16GpsPacketCount = 11;
 
 #ifdef SIMULATE
-    static int16_t ang=0;
+    static float ang=0.0;
     static int16_t height=0;
     home.set(510000000, 67000000, 5, 0 );
     HomeIsSet = true;
     plane.simulate( home, 500, ang, height );
-    ang++;
+    ang+=0.5;
     height++;
     if( ang > 180 ) ang -= 360;
     else if( ang < -180 ) ang += 360;
@@ -280,10 +285,10 @@ int16_t tracker::readNorth( void )
     //resultadcEnd(POTIPIN);
     static int valadc = 1700;
     valadc = ( 2 * valadc + analogRead(POTIPIN)) / 3; // Poti value in in range of, 0..3510 (4092 is not reached)
-    i16panzero = map( valadc, 0, 3510, LOWPAN, HIGHPAN );
-i16panzero = 0;
-    float akku = AKKUFACTOR * 2.5 / 4096;
-    //Serial.println(akku * analogRead(AKKUPIN));
+    i16panzero = map( valadc, 0, 3510, LOWPAN, HIGHPAN ); // das muss an eine bedingung gebunden werden
+//i16panzero = 0; // big noise, try median filter?
+    AkkuVoltage = AKKUFACTOR * 2.5 / 4096 * analogRead(AKKUPIN);
+    //Serial.println( AkkuVoltage );
     //Serial.println(i16panzero); // Wert ausgeben
     return i16panzero;
 }
@@ -293,10 +298,54 @@ i16panzero = 0;
 
 
 
+#define MIN_INTERVAL  10000   // 100 Hz call frequency
+#define MIN_ISR_TIME  200     // 5000 Hz interrupt
+#define MAX_ISR_TIME  10000   // 100 Hz interrupt
+
 void tracker::setStepper( int16_t i16AngValue )
 {
- 
-  iStepperSet = map(i16AngValue, -1800,1800,-STEP_LIMIT,+STEP_LIMIT);
+  int ipos, iset, idiff;
+  int isrtime;
+  static unsigned long last = 0;
+  unsigned long now;
+  unsigned long interval;
+  
+  static int16_t Value = i16AngValue;
+  Value = (3 * Value + i16AngValue ) / 4; // filter i16AngValue
+
+  timerAlarmDisable(timer);
+
+  ipos = iStepperPos;
+  iset = map(Value, -1800,1800,-STEP_LIMIT,+STEP_LIMIT);
+  idiff = iset - ipos;
+  if( idiff < 0 )
+  { 
+    idiff = -idiff;
+  }
+
+  now = micros();
+  interval = now - last;
+  last = now;
+  if( interval < MIN_INTERVAL ){
+    interval = MIN_INTERVAL;
+  }
+
+
+  if( idiff > 0 ){
+    isrtime = interval / idiff; 
+    if( isrtime < MIN_ISR_TIME ){
+      isrtime = MIN_ISR_TIME;
+    }
+    if( isrtime > MAX_ISR_TIME ){
+      isrtime = MAX_ISR_TIME;
+    }
+
+    iStepperSet = iset;
+    timerAlarmWrite(timer, isrtime, true);  		
+    timerAlarmEnable(timer);
+  }
+  
+  //Serial.println( String(interval) + " / " + String(isrtime) ); 
   //Serial.println( String(i16pan) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
 }
 

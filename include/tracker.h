@@ -4,7 +4,7 @@
 #include "gps.h"
 #include "crsf_telemetrie.h"
 
-#define SIMULATE
+//#define SIMULATE
 
 
 #define LOWTILT     (+0)    /* [degree * 0.1]*/
@@ -49,6 +49,8 @@ private:
     int16_t i16tiltzero = 0;
     int16_t i16panpwm = 1500;
     int16_t i16tiltpwm = 1500;
+
+    float AkkuVoltage =0.0f;
     
 
 public:
