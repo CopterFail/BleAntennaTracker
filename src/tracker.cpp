@@ -5,7 +5,6 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
-#include "PWM.h"
 
 #include "tracker.h"
 #include "crsf_telemetrie.h"
@@ -15,86 +14,16 @@
 #define OK_CHANNEL    3
 #define ARM_CHANNEL   4
 
-// Stepper definitions
-#define STEP_PIN  14
-#define DIR_PIN   12
-#define FAST_PIN  13
-#define STEP_LIMIT (100*16*4)   // counting micro steps (1/16) and 1:4 gear for one direction
-#define FAST_FACTOR (4)       // quarter steps instead of 1/16
-#define MIN_INTERVAL  10000   // 100 Hz call frequency for new stepper values
-#define MIN_ISR_TIME  200     // 1000 Hz interrupt
-#define MAX_ISR_TIME  10000   // 100 Hz interrupt
-
-
-
-
-
-PWMController PWM;
-pwm_channel_t chPan, chTilt;
 Preferences preferences;
+crsf_telemetrie crsf; 
 
-
-volatile int iStepperPos=0;
-volatile int iStepperSet=0;
-volatile int iStepperFactor=1;
-
- 
-hw_timer_t * timer = NULL;      //H/W timer defining (Pointer to the Structure)
-
-portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
-
-void IRAM_ATTR onTimer() {      //Defining Inerrupt function with IRAM_ATTR for faster access
-  static bool state = true;
-  int diff;
-
-  if( state )
-  {
-    diff = iStepperSet - iStepperPos;
-    portENTER_CRITICAL_ISR(&timerMux);
-    if( (diff > 0) && (iStepperPos < +STEP_LIMIT) )
-    {
-      digitalWrite(DIR_PIN, HIGH );
-      digitalWrite(STEP_PIN, HIGH);
-      iStepperPos+= iStepperFactor;
-    }
-    else if( (diff < 0) && (iStepperPos > -STEP_LIMIT) ) 
-    {
-      digitalWrite(DIR_PIN, LOW );
-      digitalWrite(STEP_PIN, HIGH);
-      iStepperPos-= iStepperFactor;
-    }
-    else
-    {
-      digitalWrite(STEP_PIN, LOW);
-    }
-    state = false;
-    
-    portEXIT_CRITICAL_ISR(&timerMux);
-      
-  }
-  else
-  {
-      digitalWrite(STEP_PIN, LOW);
-      state = true;
-  } 
-}
- 
-
-
-tracker::tracker(/* args */)
-{
-}
-
-tracker::~tracker()
-{
-}
-
-
-void  tracker::setup( void )
+void  tracker::setup( bool bSimulation )
 {
   int16_t i16North;
   int16_t i16Horizontal;
 
+  bSim = bSimulation;
+  
   //readback nvs:
   preferences.begin("tracker", false); 
   i16North = preferences.getShort("dir_north", 1500);
@@ -106,45 +35,29 @@ void  tracker::setup( void )
 
   HomeIsSet = (home.getLat() != 0 ) && (home.getLon() != 0 );
   Serial.println( "Home: " + String(home.getLat()) + "/" + String(home.getLon()) );
-
-   // Init the 2 servo pwm channels
-  chPan = PWM.allocate( PANPIN, 50 ); 
-  PWM.setDuty( chPan, 20000 );  // 20ms duty
-  chTilt = PWM.allocate( TILTPIN, 50 ); 
-  PWM.setDuty( chTilt, 20000 );  // 20ms duty
-  
-  // Set initial servo position, or wait for more information?
-  //PWM.setMicroseconds( chPan, 1500 ); 
-  //PWM.setMicroseconds( chTilt, 1500 ); 
-
-  pinMode( STEP_PIN, OUTPUT );
-  pinMode( DIR_PIN, OUTPUT );
-  pinMode( FAST_PIN, OUTPUT );
-
-  timer = timerBegin(0, 80, true);           	// timer 0, prescalar: 80, UP counting
-  timerAttachInterrupt(timer, &onTimer, true); 	// Attach interrupt
-  timerAlarmWrite(timer, 1000, true);  		// Match value= 1000 for 1ms, 100 for 0.1ms. delay.
-  timerAlarmEnable(timer);           			// Enable Timer with interrupt (Alarm Enable)
-
-
 }
 
-void  tracker::loop( crsf_telemetrie &crsf )
+bool tracker::loop( void )
 {
+  bool result = false;
 
   (void)readNorth();
+  result = updateCalculation();
 
-#ifndef SIMULATE
+  return result;
+
+
+
+#if 0
   if( crsf.getChannel(ARM_CHANNEL) < 1200 )
   {
     // overwrite the pwm values:
     //i16panpwm = crsf.getChannel(PAN_CHANNEL);
     //i16panpwm = getPanPwm( i16panzero );
     //i16panpwm = crsf.getChannel(PAN_CHANNEL);
-    i16tiltpwm = crsf.getChannel(TILT_CHANNEL);
-    setServos( i16panpwm, i16tiltpwm );
-    //setStepper( ((float)i16panpwm-1500.0)*(1800/500) );
-  setStepper( i16panzero );
+//    i16tiltpwm = crsf.getChannel(TILT_CHANNEL);
+//    setServos( i16panpwm, i16tiltpwm );
+//  setStepper( i16panzero );
 
     if( crsf.getChannel(OK_CHANNEL) > 1900 )
     {
@@ -152,22 +65,16 @@ void  tracker::loop( crsf_telemetrie &crsf )
     }
     if( crsf.getChannel(OK_CHANNEL) < 1200 )
     {
-        HomeIsSet = false;
+        //HomeIsSet = false;
     }
   }
   else 
-#endif  
-  if( updateCalculation( crsf ) )
-  {
-    //i16pan = getPan();
-    //i16tilt = getTilt();
-    setServos( i16panpwm, i16tiltpwm );
-    setStepper( i16pan );
-  }
+#endif
 
+  
 }
 
-bool tracker::updateCalculation( crsf_telemetrie &crsf )
+bool tracker::updateCalculation( void )
 {
     bool result = false;
     float distance = 0.0;
@@ -215,27 +122,9 @@ bool tracker::updateCalculation( crsf_telemetrie &crsf )
 #endif
             distance = home.dist( plane );
             Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan) + " Tilt:" + String(i16tilt));
-
-            // calculate the servo output values
-            i16panpwm = getPanPwm( i16pan );
-            i16tiltpwm = getTiltPwm( i16tilt );
         }
     }   
     return result;
-}
-
-int16_t tracker::getPanPwm( int16_t i16Angle )
-{
-    int16_t i16result;
-    i16result = map( i16Angle, LOWPAN, HIGHPAN, LOWPAN_PWM, HIGHPAN_PWM);  /* swap to change direction? */
-    return i16result;
-}
-
-int16_t tracker::getTiltPwm( int16_t i16Angle )
-{
-    int16_t i16result;
-    i16result = map( i16Angle, LOWTILT, HIGHTILT, LOWTILT_PWM, HIGHTILT_PWM );
-    return i16result;
 }
 
 void tracker::setHome( gps &h )
@@ -260,8 +149,8 @@ void tracker::setPlane( gps &p )
 void tracker::setZero( int16_t i16pan, int16_t i16tilt, bool bStore )
 {
     /* parameter range is 1000 .. 2000 [us] */
-    i16panzero = map( i16pan, LOWPAN_PWM, HIGHPAN_PWM, LOWPAN, HIGHPAN );
-    i16tiltzero = map( i16tilt, LOWTILT_PWM, HIGHTILT_PWM, LOWTILT, HIGHTILT );
+    //i16panzero = map( i16pan, LOWPAN_PWM, HIGHPAN_PWM, LOWPAN, HIGHPAN );
+    //i16tiltzero = map( i16tilt, LOWTILT_PWM, HIGHTILT_PWM, LOWTILT, HIGHTILT );
 
     i16panzero -= CENTERPAN;
     i16tiltzero -= CENTERTILT;
@@ -276,13 +165,6 @@ void tracker::setZero( int16_t i16pan, int16_t i16tilt, bool bStore )
     }
 
     Serial.println("Zero (p/t):" + String(i16panzero) + " Ang:" + String(i16tiltzero));
-}
-
-void tracker::setServos( int16_t i16pan, int16_t i16tilt )
-{
-  PWM.setMicroseconds( chPan, i16pan );
-  PWM.setMicroseconds( chTilt, i16tilt );
-  Serial.println( String(i16pan) + " / " + String(i16tilt) ); 
 }
 
 int16_t tracker::readNorth( void )
@@ -300,64 +182,6 @@ int16_t tracker::readNorth( void )
     //Serial.println( AkkuVoltage );
     //Serial.println(i16panzero); // Wert ausgeben
     return i16panzero;
-}
-
-void tracker::setStepper( int16_t i16AngValue )
-{
-  int ipos, iset, idiff;
-  int isrtime;
-  static unsigned long last = 0;
-  unsigned long now;
-  unsigned long interval;
-  bool bFast = false;
-  
-  static int16_t Value = i16AngValue;
-  Value = (3 * Value + i16AngValue ) / 4; // filter i16AngValue
-
-  timerAlarmDisable(timer);
-
-  ipos = iStepperPos;
-  iset = map(Value, -1800,1800,-STEP_LIMIT,+STEP_LIMIT);
-  idiff = iset - ipos;
-  if( idiff < 0 )
-  { 
-    idiff = -idiff;
-  }
-
-  now = micros();
-  interval = now - last;
-  last = now;
-  if( interval < MIN_INTERVAL ){
-      interval = MIN_INTERVAL;
-  }
-
-  if( idiff > 0 ){
-    isrtime = interval / idiff; 
-    if( isrtime < MIN_ISR_TIME ){
-      isrtime *= FAST_FACTOR;
-      bFast = true;
-      if( isrtime < (MIN_ISR_TIME) ){   // use a longer isrtime with faster steps?
-        isrtime = MIN_ISR_TIME;
-      }
-    }
-    if( isrtime > MAX_ISR_TIME ){
-      isrtime = MAX_ISR_TIME;
-    }
-
-    if( bFast ){ 
-      digitalWrite(FAST_PIN, LOW);
-      iStepperFactor = FAST_FACTOR; // set full steps
-    }else{
-      digitalWrite(FAST_PIN, HIGH); // set quarter steps
-      iStepperFactor = 1;
-    }
-    iStepperSet = iset;
-    timerAlarmWrite(timer, isrtime, true);  		
-    timerAlarmEnable(timer);
-    
-    //Serial.println( String(interval/idiff) + " / " + String(isrtime) + " / " + String(iStepperFactor) ); 
-    //Serial.println( String(i16pan) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
-  }
 }
 
 

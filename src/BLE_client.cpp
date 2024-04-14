@@ -10,6 +10,8 @@
 
 #include "BLEDevice.h"
 //#include "BLEScan.h"
+#include "crsf_telemetrie.h"
+
 
 
 // The remote service we wish to connect to.
@@ -25,14 +27,31 @@ static boolean connected = false;
 static boolean doScan = false;
 static BLERemoteCharacteristic* pRemoteCharacteristic;
 static BLEAdvertisedDevice* myDevice;
+static bool bSim = false;
 
 static void BLE_scan( void );
+
+
+extern crsf_telemetrie crsf; 
 
 void notifyCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic,
   uint8_t* pData,
   size_t length,
-  bool isNotify); 
+  bool isNotify) 
+{
+    /*
+    Serial.print("Notify callback for characteristic ");
+    Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
+    Serial.print(" of data length ");
+    Serial.println(length);
+    Serial.print("data: ");
+    */
+    //Serial.println((char*)pData);
+    crsf.parseData(pData, length, isNotify );
+}
+
+
 
 
 class MyClientCallback : public BLEClientCallbacks {
@@ -147,9 +166,9 @@ static void BLE_scan( void )
   }
 }
 
-void BLE_setup( void ) 
+void BLE_setup( bool bSimulation ) 
 {
- 
+  bSim = bSimulation;
   BLEDevice::init("");
 
   Serial.print("Set MTU to ");

@@ -3,7 +3,7 @@
 
 
 
-void BLE_setup( void );
+void BLE_setup( bool bSimulation );
 bool BLE_loop( void );
 
 
