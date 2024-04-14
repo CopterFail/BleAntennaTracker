@@ -22,7 +22,7 @@ public:
 
     void setup( bool bSimulation );
     void loop( void );
-    void setServos( uint16_t i16PanPWM, uint16_t i16TiltPWM );
+    void setServos( int16_t i16PanPWM, int16_t i16TiltPWM );
 };
 
 #endif

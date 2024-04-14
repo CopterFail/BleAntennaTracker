@@ -23,6 +23,9 @@ void  tracker::setup( bool bSimulation )
   int16_t i16Horizontal;
 
   bSim = bSimulation;
+  if( bSim ){
+    Serial.println("Simulation for tracker is active ");
+    }
   
   //readback nvs:
   preferences.begin("tracker", false); 
@@ -80,28 +83,34 @@ bool tracker::updateCalculation( void )
     float distance = 0.0;
     static int16_t i16GpsPacketCount = 11;
 
-#ifdef SIMULATE
-    static float ang=0.0;
-    static int16_t height=-5;
-    home.set(510000000, 67000000, 5, 0 );
-    HomeIsSet = true;
-    plane.simulate( home, 500, ang, height );
-    ang+=1;
-    height++;
-    if( ang > 180 ) ang -= 360;
-    else if( ang < -180 ) ang += 360;
-    if( true )
-#else    
-    if( crsf.getLatestGps( plane ) && plane.getSatelites() >= MINSATELITES )
-#endif
-{
+    if( bSim || (crsf.getLatestGps( plane ) && plane.getSatelites() >= MINSATELITES ))
+    {
         result = true;
         if( !HomeIsSet )
         {
-            setHome( plane );
+            if( bSim )
+            {
+              home.set(510000000, 67000000, 5, 0 );
+              HomeIsSet = true;
+              simAng = 0.0f;
+              simHeight = 0.0f;
+
+            }
+            else
+            {
+              setHome( plane );
+            }
         }
         else
         {
+            if( bSim )
+            {
+              plane.simulate( home, 500, simAng, simHeight );
+              simAng += 1.0f;
+              simHeight += 1.0f;
+              if( simAng > 180 ) simAng -= 360;
+              else if( simAng < -180 ) simAng += 360;
+            }
             i16pan = (int16_t)(home.degree( plane ) * (1800.0/M_PI)); /* range is [-1800;+1800] */
             i16pan += i16panzero; /* add offset, i16panzero is in range [-1800;1800] -> [-3600;+3600]*/
             if( i16pan < -1800 ) i16pan += 3600; /* set range to [-1800..1800] */

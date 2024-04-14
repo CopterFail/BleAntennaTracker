@@ -60,6 +60,10 @@ void IRAM_ATTR onTimer() {      //Defining Inerrupt function with IRAM_ATTR for 
 void stepper::setup( bool bSimulation )
 {
     bSim = bSimulation;
+    if( bSim ){
+      Serial.println("Simulation for stepper is active ");
+    }
+
     pinMode( STEP_PIN, OUTPUT );
     pinMode( DIR_PIN, OUTPUT );
     pinMode( FAST_PIN, OUTPUT );
@@ -70,7 +74,7 @@ void stepper::setup( bool bSimulation )
     timerAlarmEnable(timer);           			// Enable Timer with interrupt (Alarm Enable)
 }
 
-void stepper::setStepper( uint16_t i16AngValue )
+void stepper::setStepper( int16_t i16AngValue )
 {
   int ipos, iset, idiff;
   int isrtime;

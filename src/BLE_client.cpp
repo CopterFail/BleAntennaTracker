@@ -169,6 +169,11 @@ static void BLE_scan( void )
 void BLE_setup( bool bSimulation ) 
 {
   bSim = bSimulation;
+  if( bSim ){
+    Serial.println("Simulation for BLE is active ");
+    return;
+  }
+
   BLEDevice::init("");
 
   Serial.print("Set MTU to ");
@@ -183,6 +188,7 @@ void BLE_setup( bool bSimulation )
 // This is the Arduino main loop function.
 bool BLE_loop( void ) 
 {
+  if( bSim ) return true;
 
   // If the flag "doConnect" is true then we have scanned for and found the desired
   // BLE Server with which we wish to connect.  Now we connect to it.  Once we are 

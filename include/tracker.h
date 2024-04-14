@@ -38,6 +38,8 @@ private:
     int16_t i16tiltzero = 0;
 
     float AkkuVoltage =0.0f;
+    float simAng = 0.f;
+    float simHeight = 0.0f;
 
 public:
     tracker(/* args */){};

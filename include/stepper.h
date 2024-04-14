@@ -17,7 +17,7 @@ public:
 
     void setup( bool bSimulation );
     void loop( void ){};
-    void setStepper( uint16_t i16PanPWM );
+    void setStepper( int16_t i16PanPWM );
 };
 
 #endif

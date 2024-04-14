@@ -21,18 +21,13 @@ stepper mystepper;
 
 void setup() 
 {
-  bool bSimulation = false;
-
   Serial.begin(115200);
   Serial.println("Starting BLE Client Antenna Tracker Application V0.0.1");
-  if( bSimulation ){
-    Serial.println("Simulation for BLE / GPS / SERO / STEPPER ");
-  }
   myled.setup(); //start LED at first
-  BLE_setup( bSimulation );
-  mytracker.setup( bSimulation );
-  myservo.setup( bSimulation );
-  mystepper.setup( bSimulation );
+  BLE_setup( true );
+  mytracker.setup( true );
+  myservo.setup( true );
+  mystepper.setup( false );
 
   Serial.println("... End of setup");
 }
@@ -43,7 +38,7 @@ void loop()
   {
     if( mytracker.loop() )
     {
-     // myservo.setServos( mytracker.getPan(), mytracker.getTilt() );
+     myservo.setServos( mytracker.getPan(), mytracker.getTilt() );
      mystepper.setStepper( mytracker.getPan() );
     }
   }
