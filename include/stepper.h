@@ -10,6 +10,7 @@ class stepper
 private:
     /* data */
     bool bSim = false;
+    int iMinIsrTime;
 
 public:
     stepper(/* args */){}
@@ -17,7 +18,9 @@ public:
 
     void setup( bool bSimulation );
     void loop( void ){};
+    bool findIndex( void );
     void setStepper( int16_t i16PanPWM );
+    //void setMaxSpeed( ); //deg/us ? 
 };
 
 #endif

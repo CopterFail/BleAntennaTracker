@@ -39,6 +39,7 @@ private:
 
     float AkkuVoltage =0.0f;
     float simAng = 0.f;
+    float simDir = 1.0f;
     float simHeight = 0.0f;
 
 public:

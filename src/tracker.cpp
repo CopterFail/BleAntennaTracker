@@ -94,7 +94,7 @@ bool tracker::updateCalculation( void )
               HomeIsSet = true;
               simAng = 0.0f;
               simHeight = 0.0f;
-
+              simDir = 1.0f;
             }
             else
             {
@@ -106,11 +106,12 @@ bool tracker::updateCalculation( void )
             if( bSim )
             {
               plane.simulate( home, 500, simAng, simHeight );
-              simAng += 1.0f;
+              simAng += simDir;
               simHeight += 1.0f;
-              if( simAng > 180 ) simAng -= 360;
-              else if( simAng < -180 ) simAng += 360;
+              if( simAng > 100 ){ simDir = -1; }
+              else if( simAng < -100 ){ simDir = +1; }
             }
+
             i16pan = (int16_t)(home.degree( plane ) * (1800.0/M_PI)); /* range is [-1800;+1800] */
             i16pan += i16panzero; /* add offset, i16panzero is in range [-1800;1800] -> [-3600;+3600]*/
             if( i16pan < -1800 ) i16pan += 3600; /* set range to [-1800..1800] */
