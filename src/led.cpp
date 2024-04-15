@@ -31,24 +31,43 @@ void led::setup( void )
     strip.Begin();
     strip.ClearTo(black); 
     strip.Show();
-    strip.SetPixelColor(0, red);
+
+    strip.SetPixelColor(LED_POWER, red);
+    strip.SetPixelColor(LED_BLE, red);
+    strip.SetPixelColor(LED_GPS, red);
+    strip.SetPixelColor(LED_STEPPER, red);
+    strip.SetPixelColor(LED_HOME, red);
+    strip.SetPixelColor(LED_TRACKER, red);
     strip.Show();
+
+    update = false;
 }
     
 void led::loop( void )
 {
-    strip.SetPixelColor(0, red);
-    strip.SetPixelColor(1, green);
-    strip.SetPixelColor(2, blue);
-    strip.SetPixelColor(3, white);
-    strip.SetPixelColor(4, red);
-    strip.SetPixelColor(5, green);
-    strip.SetPixelColor(6, blue);
-    strip.SetPixelColor(7, white);
-    strip.Show();
+    if( update )
+    {
+        strip.Show();
+    }
+    update = false;
 }
 
-void led::setStatus( uint8_t ledNr, uint8_t letStatus )
+void led::setState( uint8_t ledNr, uint8_t ledStatus )
 {
-
+    switch( ledStatus ){
+        case STATUS_BUSY:
+            strip.SetPixelColor(ledNr, blue);
+            break;
+        case STATUS_OK:
+            strip.SetPixelColor(ledNr, green);
+            break;
+        case STATUS_WAIT:
+            strip.SetPixelColor(ledNr, white);
+            break;
+        case STATUS_FAIL:
+        default:
+            strip.SetPixelColor(ledNr, red);
+            break;
+    }
+    update = true;
 }

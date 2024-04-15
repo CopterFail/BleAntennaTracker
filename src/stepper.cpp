@@ -1,6 +1,7 @@
 
 
 #include <Arduino.h>
+#include "led.h"
 #include "stepper.h"
 
 // Stepper definitions
@@ -122,6 +123,13 @@ bool stepper::findIndex( void )
     iMinIsrTime = MIN_ISR_TIME;
     return bIndexFound;
 }
+uint8_t stepper::getState( void )
+{
+  uint8_t result = STATUS_WAIT;
+  if( bIndexFound ) result = STATUS_OK;
+  return result;
+}
+
 void stepper::setStepper( int16_t i16AngValue )
 {
   int ipos, iset, idiff;

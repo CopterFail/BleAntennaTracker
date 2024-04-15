@@ -21,6 +21,7 @@ public:
     bool findIndex( void );
     void setStepper( int16_t i16PanPWM );
     //void setMaxSpeed( ); //deg/us ? 
+    uint8_t getState( void );
 };
 
 #endif

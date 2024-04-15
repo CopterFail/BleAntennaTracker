@@ -8,6 +8,7 @@
 
 #include "tracker.h"
 #include "crsf_telemetrie.h"
+#include "led.h"
 
 #define PAN_CHANNEL   0
 #define TILT_CHANNEL  1
@@ -16,6 +17,7 @@
 
 Preferences preferences;
 crsf_telemetrie crsf; 
+extern led myled;
 
 void  tracker::setup( bool bSimulation )
 {
@@ -184,13 +186,21 @@ int16_t tracker::readNorth( void )
     //adcStart(POTIPIN);
     //adcBusy(POTIPIN);
     //resultadcEnd(POTIPIN);
-    static int valadc = 1700;
-    valadc = ( 2 * valadc + analogRead(POTIPIN)) / 3; // Poti value in in range of, 0..3510 (4092 is not reached)
-    i16panzero = map( valadc, 0, 3510, LOWPAN, HIGHPAN ); // das muss an eine bedingung gebunden werden
+    static int valadcpan = 1700;
+    float valadcbat = 0.0;
+    valadcpan = ( 2 * valadcpan + analogRead(POTIPIN)) / 3; // Poti value in in range of, 0..3510 (4092 is not reached)
+    i16panzero = map( valadcpan, 0, 3510, LOWPAN, HIGHPAN ); // das muss an eine bedingung gebunden werden
 //i16panzero = 0; // big noise, try median filter?
-    AkkuVoltage = AKKUFACTOR * 2.5 / 4096 * analogRead(AKKUPIN);
-    //Serial.println( AkkuVoltage );
-    //Serial.println(i16panzero); // Wert ausgeben
+    valadcbat = AKKUFACTOR * 4.0 / 4096 * analogRead(AKKUPIN); //why ?
+    AkkuVoltage = ( 10.0 * AkkuVoltage + valadcbat ) / 11.0;
+     
+    Serial.println( String(i16panzero) + " / " + String(AkkuVoltage) ); // Wert ausgeben
+
+    if( AkkuVoltage > 10.0 ) myled.setState( LED_POWER, STATUS_OK );
+    else  myled.setState( LED_POWER, STATUS_FAIL );
+    //if( i16panzero != 0 ) myled.setState( LED_??, STATUS_OK );
+    //else  myled.setState( LED_POWER, STATUS_FAIL );
+    
     return i16panzero;
 }
 
