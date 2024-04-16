@@ -11,11 +11,13 @@
 #include "led.h"
 #include "servo.h"
 #include "stepper.h"
+#include "button.h"
 
 tracker mytracker;
 led myled;
 servo myservo;
 stepper mystepper;
+extern button mybutton;
 
 
 
@@ -28,28 +30,35 @@ void setup()
   mytracker.setup( false );
   myservo.setup( true );
   mystepper.setup( false );
+  mybutton.setup( true );
 
   Serial.println("... End of setup");
 }
 
 void loop() 
 {
-  if( BLE_loop() )
+  bool bBle, bTracker;
+  
+  bBle = BLE_loop();
+  if( bBle )
   {
-      myled.setState( LED_BLE, STATUS_OK);
-      if( mytracker.loop() )
+      bTracker = mytracker.loop();
+      if( bTracker )
       {
-          myled.setState( LED_GPS, STATUS_OK);
-          myled.setState( LED_HOME, STATUS_OK); //??
-          myled.setState( LED_TRACKER, STATUS_OK); //??
           myservo.setServos( mytracker.getPan(), mytracker.getTilt() );
           mystepper.setStepper( mytracker.getPan() );
-      }else myled.setState( LED_TRACKER, STATUS_WAIT);
-  }else myled.setState( LED_BLE, STATUS_WAIT);
-  myled.setState( LED_STEPPER, mystepper.getState() );
+      }
+  }
+
+  myled.setState( LED_BLE, bBle ? STATUS_OK : STATUS_WAIT);
+  myled.setState( LED_TRACKER, bTracker ? STATUS_OK : STATUS_WAIT ); 
+  myled.setState( LED_STEPPER, mystepper.getState() ? STATUS_OK : STATUS_WAIT );
+  myled.setState( LED_GPS, mytracker.isPlaneSet() ? STATUS_OK : STATUS_WAIT );
+  myled.setState( LED_HOME, mytracker.isHomeSet() ? STATUS_OK : STATUS_WAIT );
+
 
 //myanalog.loop(); is still missing....
-
+  mybutton.loop();
   myled.loop();
   delay(50);
 }

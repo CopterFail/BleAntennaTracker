@@ -38,8 +38,10 @@ void  tracker::setup( bool bSimulation )
   home.setLon( preferences.getInt("pos_lon", 0) );
   preferences.end();
 
-  HomeIsSet = (home.getLat() != 0 ) && (home.getLon() != 0 );
-  Serial.println( "Home: " + String(home.getLat()) + "/" + String(home.getLon()) );
+  bPlaneIsSet = false;
+  bHomeIsSet = (home.getLat() != 0 ) && (home.getLon() != 0 );
+  if( bHomeIsSet )
+    Serial.println( "Home: " + String(home.getLat()) + "/" + String(home.getLon()) );
 }
 
 bool tracker::loop( void )
@@ -88,12 +90,12 @@ bool tracker::updateCalculation( void )
     if( bSim || (crsf.getLatestGps( plane ) && plane.getSatelites() >= MINSATELITES ))
     {
         result = true;
-        if( !HomeIsSet )
+        if( !bHomeIsSet )
         {
             if( bSim )
             {
               home.set(510000000, 67000000, 5, 0 );
-              HomeIsSet = true;
+              bHomeIsSet = true;
               simAng = 0.0f;
               simHeight = 0.0f;
               simDir = 1.0f;
@@ -105,6 +107,7 @@ bool tracker::updateCalculation( void )
         }
         else
         {
+            bPlaneIsSet = true;
             if( bSim )
             {
               plane.simulate( home, 500, simAng, simHeight );
@@ -142,8 +145,8 @@ bool tracker::updateCalculation( void )
 void tracker::setHome( gps &h )
 {
   home = h;
-  HomeIsSet = (home.getLat() != 0 ) && (home.getLon() != 0 );
-  if( HomeIsSet )
+  bHomeIsSet = (home.getLat() != 0 ) && (home.getLon() != 0 );  //sat count?
+  if( bHomeIsSet )
   {
     preferences.begin("tracker", false); 
     preferences.putInt("pos_lat", home.getLat());
@@ -194,7 +197,7 @@ int16_t tracker::readNorth( void )
     valadcbat = AKKUFACTOR * 4.0 / 4096 * analogRead(AKKUPIN); //why ?
     AkkuVoltage = ( 10.0 * AkkuVoltage + valadcbat ) / 11.0;
      
-    Serial.println( String(i16panzero) + " / " + String(AkkuVoltage) ); // Wert ausgeben
+    //Serial.println( String(i16panzero) + " / " + String(AkkuVoltage) ); // Wert ausgeben
 
     if( AkkuVoltage > 10.0 ) myled.setState( LED_POWER, STATUS_OK );
     else  myled.setState( LED_POWER, STATUS_FAIL );

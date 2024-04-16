@@ -31,7 +31,8 @@ private:
     gps home;
     gps plane;
     bool update;
-    bool HomeIsSet = false;
+    bool bHomeIsSet = false;
+    bool bPlaneIsSet = false;
     int16_t i16pan = CENTERPAN;
     int16_t i16tilt = CENTERTILT;
     int16_t i16panzero = 0;
@@ -56,6 +57,8 @@ public:
     void setZero( int16_t i16pan, int16_t i16tilt, bool bStore );
     void setServos( int16_t i16pan, int16_t i16tilt );
     int16_t readNorth( void );
+    bool isHomeSet( void ){ return bHomeIsSet; };
+    bool isPlaneSet( void ){ return bPlaneIsSet; };
 };
 
 #endif

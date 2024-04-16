@@ -29,6 +29,8 @@ public:
     void loop( void );
     void setState( uint8_t ledNr, uint8_t ledStatus );
     uint8_t getState( void );
+
+    //ack nack....
 };
 
 #endif
