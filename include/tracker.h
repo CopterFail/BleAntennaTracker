@@ -49,7 +49,7 @@ public:
 
     void setup( bool bSimulation );
     bool loop( void );
-    void setHome( gps &h );
+    bool setHome( void );
     void setPlane( gps &p );
     bool updateCalculation( void );
     int16_t getPan( void ){ return i16pan; }

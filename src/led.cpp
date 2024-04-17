@@ -15,6 +15,7 @@ RgbColor green(0, colorSaturation, 0);
 RgbColor blue(0, 0, colorSaturation);
 RgbColor white(colorSaturation);
 RgbColor black(0);
+RgbColor flashColor;
 
 
  led::led(/* args */)
@@ -50,6 +51,29 @@ void led::loop( void )
         strip.Show();
     }
     update = false;
+
+    if( i8flashcnt > 0 )
+    {
+        i8flashcnt--;
+        if( i8flashcnt & 1 == 1)
+        {
+            strip.SetPixelColor(LED_FLASH1, flashColor);
+            strip.SetPixelColor(LED_FLASH2, flashColor);
+        }
+        else
+        {
+            strip.SetPixelColor(LED_FLASH1, black);
+            strip.SetPixelColor(LED_FLASH2, black);
+        }
+        strip.Show();
+    }
+}
+
+void led::flash( bool bOk )
+{
+    if( bOk ) flashColor = green;
+    else flashColor = red;
+    i8flashcnt = 10;
 }
 
 void led::setState( uint8_t ledNr, uint8_t ledStatus )

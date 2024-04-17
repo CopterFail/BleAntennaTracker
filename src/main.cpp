@@ -26,11 +26,11 @@ void setup()
   Serial.begin(115200);
   Serial.println("Starting BLE Client Antenna Tracker Application V0.0.1");
   myled.setup(); //start LED at first
-  BLE_setup( false );
-  mytracker.setup( false );
-  myservo.setup( true );
-  mystepper.setup( false );
-  mybutton.setup( true );
+  BLE_setup( true );
+  mytracker.setup( true );
+  myservo.setup( false );
+  mystepper.setup( true );
+  mybutton.setup( false );
 
   Serial.println("... End of setup");
 }
@@ -56,6 +56,22 @@ void loop()
   myled.setState( LED_GPS, mytracker.isPlaneSet() ? STATUS_OK : STATUS_WAIT );
   myled.setState( LED_HOME, mytracker.isHomeSet() ? STATUS_OK : STATUS_WAIT );
 
+  if( mybutton.bPressedBlue ) // blue button (right) tries to set home, if gps is valid
+  {
+    myled.flash( mytracker.setHome() ); 
+  } 
+
+  if( mybutton.bPressedRed ) 
+  {
+    myled.flash( true );
+    for( int i=0; i<500; i++ )
+    {
+      mystepper.setStepper( mytracker.readNorth() );  // point north
+      // adjust with poti
+      myled.loop();
+      delay( 20 );
+    }
+  }
 
 //myanalog.loop(); is still missing....
   mybutton.loop();

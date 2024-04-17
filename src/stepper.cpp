@@ -10,11 +10,12 @@
 #define FAST_PIN  13
 #define INDEX_PIN 27 
 #define STEP_LIMIT (100*16*4)   // counting micro steps (1/16) and 1:4 gear for one direction
-#define FAST_FACTOR (4)       // quarter steps instead of 1/16
+#define FAST_FACTOR (4)       // quarter steps instead of 1/16 - works well
+//#define FAST_FACTOR (2)       // 1/8 steps instead of 1/16 - test
 #define MIN_INTERVAL  10000   // 100 Hz call frequency for new stepper values
 #define MIN_ISR_TIME  200     // 1000 Hz interrupt
 #define MAX_ISR_TIME  10000   // 100 Hz interrupt
-#define INDEX_SIZE    58
+#define INDEX_SIZE    (85)   // 56
 
 volatile int iStepperPos = 0;
 volatile int iStepperSet = 0;
@@ -113,7 +114,7 @@ void stepper::setup( bool bSimulation )
 bool stepper::findIndex( void )
 {
     //iMinIsrTime = 4 * MIN_ISR_TIME;
-    for( int i=0; (i<3600) && (bIndexFound == false); i+=60 ){
+    for( int i=0; (i<6000) && (bIndexFound == false); i+=60 ){
       iStepperPos = 0;
       setStepper( 60 );
       delay( 50 );
@@ -125,7 +126,7 @@ bool stepper::findIndex( void )
 }
 uint8_t stepper::getState( void )
 {
-  uint8_t result = STATUS_WAIT;
+  uint8_t result = STATUS_FAIL;
   if( bIndexFound ) result = STATUS_OK;
   return result;
 }

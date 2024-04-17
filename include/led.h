@@ -9,6 +9,8 @@
 #define LED_STEPPER 4
 #define LED_HOME    5
 #define LED_TRACKER 6
+#define LED_FLASH1  0
+#define LED_FLASH2  7
 
 #define STATUS_WAIT 0
 #define STATUS_BUSY 1
@@ -20,7 +22,8 @@ class led
 private:
     /* data */
     bool update;
-
+    uint8_t i8flashcnt;
+    
 public:
     led(/* args */);
     ~led();
@@ -29,6 +32,7 @@ public:
     void loop( void );
     void setState( uint8_t ledNr, uint8_t ledStatus );
     uint8_t getState( void );
+    void flash( bool bOk );
 
     //ack nack....
 };

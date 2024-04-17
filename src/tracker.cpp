@@ -102,7 +102,7 @@ bool tracker::updateCalculation( void )
             }
             else
             {
-              setHome( plane );
+              setHome();
             }
         }
         else
@@ -142,18 +142,27 @@ bool tracker::updateCalculation( void )
     return result;
 }
 
-void tracker::setHome( gps &h )
+bool tracker::setHome( void )
 {
-  home = h;
-  bHomeIsSet = (home.getLat() != 0 ) && (home.getLon() != 0 );  //sat count?
-  if( bHomeIsSet )
+  bool result = false;
+  if( (plane.getSatelites() >= MINSATELITES) && (plane.getLat() != 0 ) && ( plane.getLon() != 0) )
   {
-    preferences.begin("tracker", false); 
-    preferences.putInt("pos_lat", home.getLat());
-    preferences.putInt("pos_lon", home.getLon());
-    preferences.end();
-    Serial.println( "Home: " + String(home.getLat()) + "/" + String(home.getLon()) );
+    home = plane;
+    bHomeIsSet = true;
+    result = true;
+    if( bHomeIsSet )
+    {
+      preferences.begin("tracker", false); 
+      preferences.putInt("pos_lat", home.getLat());
+      preferences.putInt("pos_lon", home.getLon());
+      preferences.end();
+      Serial.println( "Home: " + String(home.getLat()) + "/" + String(home.getLon()) );
+    }
   }
+  else{
+    result = false;
+  }
+  return result;
 }
 
 void tracker::setPlane( gps &p )
