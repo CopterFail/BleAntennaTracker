@@ -1,3 +1,7 @@
+/**
+ * GPS class
+ * by CopterFail 2024
+*/
 
 
 #include <Arduino.h>
@@ -33,7 +37,7 @@ void IRAM_ATTR onTimer() {      //Defining Inerrupt function with IRAM_ATTR for 
   static bool bIndex;
   int diff = 0;
 
-  if( HIGH == digitalRead(INDEX_PIN) )
+  if( LOW == digitalRead(INDEX_PIN) ) // light-bridge replaced by hall sensor (not symmetric)
   {
     if( !bIndex )
     {
@@ -99,7 +103,7 @@ void stepper::setup( bool bSimulation )
     pinMode( STEP_PIN, OUTPUT );
     pinMode( DIR_PIN, OUTPUT );
     pinMode( FAST_PIN, OUTPUT );
-    pinMode( INDEX_PIN, INPUT );
+    pinMode( INDEX_PIN, INPUT_PULLUP );
 
     iMinIsrTime = MIN_ISR_TIME;
 
@@ -114,7 +118,7 @@ void stepper::setup( bool bSimulation )
 bool stepper::findIndex( void )
 {
     //iMinIsrTime = 4 * MIN_ISR_TIME;
-    for( int i=0; (i<6000) && (bIndexFound == false); i+=60 ){
+    for( int i=0; (i<(STEP_LIMIT*2)) && (bIndexFound == false); i+=60 ){
       iStepperPos = 0;
       setStepper( 60 );
       delay( 50 );
@@ -141,6 +145,7 @@ void stepper::setStepper( int16_t i16AngValue )
   bool bFast = false;
   
   static int16_t Value = i16AngValue;
+
   Value = (3 * Value + i16AngValue ) / 4; // filter i16AngValue
 
   timerAlarmDisable(timer);
@@ -184,8 +189,8 @@ void stepper::setStepper( int16_t i16AngValue )
     timerAlarmWrite(timer, isrtime, true);  		
 
     if( bSim ){
-      Serial.println( String(interval/idiff) + " / " + String(isrtime) + " / " + String(iStepperFactor) ); 
-      Serial.println( String(i16AngValue) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
+      //Serial.println( String(interval/idiff) + " / " + String(isrtime) + " / " + String(iStepperFactor) ); 
+      //Serial.println( String(i16AngValue) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
       Serial.println( String(iDebug));
     }
     timerAlarmEnable(timer);

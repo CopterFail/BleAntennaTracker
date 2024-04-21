@@ -8,6 +8,9 @@
 
 #include "gps.h"
 
+#define EARTH_RADIUS_KM 6371.0
+#define EARTH_RADIUS_M 6371000.0
+
 gps::gps()
 {
     gps( 510000000, 67000000, 5 );
@@ -47,26 +50,46 @@ gps gps::diff( gps &b )
 
 float gps::dist( gps &b)
 {
-    float dx,dy,distance;
+    float lat1 = deg2rad((float)i32lat/1.0e7);
+    float lon1 = deg2rad((float)i32lon/1.0e7);
+    float lat2 = deg2rad((float)b.i32lat/1.0e7);
+    float lon2 = deg2rad((float)b.i32lon/1.0e7);
 
-    // see: https://www.kompf.de/gps/distcalc.html
+    // Berechnen der Differenzen
+    float dLat = lat2 - lat1;
+    float dLon = lon2 - lon1;
 
-    dx = (71500.0 / 1.0e7) * float(i32lon - b.i32lon);
-    dy = (111300.0 / 1.0e7) * float(i32lat - b.i32lat);
-    distance = sqrt(dx * dx + dy * dy);
+    // Anwenden der Haversine-Formel
+    float a = sinf(dLat / 2) * sinf(dLat / 2) +
+               cosf(lat1) * cosf(lat2) *
+               sinf(dLon / 2) * sinf(dLon / 2);
+    float c = 2 * atan2f(sqrtf(a), sqrtf(1 - a));
+    float distance = EARTH_RADIUS_M * c;
+
     return distance;
 }
 
 float gps::degree( gps &b)
 {
-    float dx,dy,grad;
+    float lat1 = deg2rad((float)i32lat/1.0e7);
+    float lon1 = deg2rad((float)i32lon/1.0e7);
+    float lat2 = deg2rad((float)b.i32lat/1.0e7);
+    float lon2 = deg2rad((float)b.i32lon/1.0e7);
 
-    dx = 71500.0 * float(i32lon - b.i32lon);  /* dx is positiv for moving east, negativ for moving west */
-    dy = 111300.0 * float(i32lat - b.i32lat); /* dy is positiv for moving north, negativ for moving south */
-    grad = atan2f(dy,dx); /* result is [-pi;+pi] , result is  0 for (E), +PI/4 for (NE), +PI/2 for (N), +3/4 PI for (NW), +-PI for [W], -3/4 PI for (SW), -PI/2 for (S), -PI/4 for (SE), 0 for (E) */
-    grad += M_PI_2;
-    if( grad > M_PI ) grad -= 2 * M_PI;
-    return grad;
+    // Berechnen der Differenzen
+    float dLon = lon2 - lon1;
+
+   // Berechnung der Peilung
+    float y = sinf(dLon) * cosf(lat2);
+    float x = cosf(lat1) * sinf(lat2) - sinf(lat1) * cosf(lat2) * cosf(dLon);
+    float bearing_rad = atan2f(y, x);
+
+    // Umwandlung von Radiant in Grad
+    float bearing_deg = rad2deg(bearing_rad);
+
+    // Umwandlung von einem -180/+180 Grad System in ein 0/360 Grad System
+    //bearing_deg = fmod(bearing_deg + 360.0, 360.0);
+    return bearing_deg;
 }
 
 float gps::tilt( gps &b )
@@ -77,6 +100,6 @@ float gps::tilt( gps &b )
     dy = dist( b );
     if( fabsf(dy) < 0.01 ) dy = 0.01;
     grad = atan2f(dx,dy); /* results is [-pi:+pi] */
-    return grad;
+    return rad2deg( grad );
 }
 

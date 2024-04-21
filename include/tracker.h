@@ -1,3 +1,8 @@
+/**
+ * GPS class
+ * by CopterFail 2024
+*/
+
 #ifndef classtracker
 #define classtracker
 
@@ -54,9 +59,9 @@ public:
     bool updateCalculation( void );
     int16_t getPan( void ){ return i16pan; }
     int16_t getTilt( void ){ return i16tilt; };
-    void setZero( int16_t i16pan, int16_t i16tilt, bool bStore );
     void setServos( int16_t i16pan, int16_t i16tilt );
     int16_t readNorth( void );
+    void readBattery( void );
     bool isHomeSet( void ){ return bHomeIsSet; };
     bool isPlaneSet( void ){ return bPlaneIsSet; };
 };

@@ -37,7 +37,8 @@ void setup()
 
 void loop() 
 {
-  bool bBle, bTracker;
+  bool bBle = false;
+  bool bTracker = false;
   
   bBle = BLE_loop();
   if( bBle )
@@ -45,8 +46,8 @@ void loop()
       bTracker = mytracker.loop();
       if( bTracker )
       {
-          myservo.setServos( mytracker.getPan(), mytracker.getTilt() );
-          mystepper.setStepper( mytracker.getPan() );
+          myservo.setServos( +1 * mytracker.getPan(), mytracker.getTilt() );  /* todo: check pan direction */
+          mystepper.setStepper( -1 * mytracker.getPan() );
       }
   }
 
@@ -67,13 +68,14 @@ void loop()
     for( int i=0; i<500; i++ )
     {
       mystepper.setStepper( mytracker.readNorth() );  // point north
+      //mystepper.setStepper( 900 /*mytracker.readNorth()*/ );  // point north
       // adjust with poti
       myled.loop();
       delay( 20 );
     }
   }
 
-//myanalog.loop(); is still missing....
+// todo: myanalog.loop(); is still missing.... see north and akku
   mybutton.loop();
   myled.loop();
   delay(50);

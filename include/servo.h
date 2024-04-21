@@ -1,3 +1,8 @@
+/**
+ * GPS class
+ * by CopterFail 2024
+*/
+
 #ifndef classservo
 #define classservo
 

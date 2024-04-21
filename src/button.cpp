@@ -1,3 +1,7 @@
+/**
+ * GPS class
+ * by CopterFail 2024
+*/
 
 #include <Arduino.h>
 #include "button.h"

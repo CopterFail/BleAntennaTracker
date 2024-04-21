@@ -35,7 +35,7 @@ void servo::loop( void )
 void servo::setServos( int16_t i16Pan, int16_t i16Tilt )
 {
     int16_t i16PanPWM = map( i16Pan, LOWPAN, HIGHPAN, LOWPAN_PWM, HIGHPAN_PWM);
-    int16_t i16TiltPWM = map( i16Tilt, LOWPAN, HIGHPAN, LOWPAN_PWM, HIGHPAN_PWM);
+    int16_t i16TiltPWM = map( i16Tilt, LOWTILT, HIGHTILT, LOWTILT_PWM, HIGHTILT_PWM);
     
     if( bSim )
     {
