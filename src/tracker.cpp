@@ -86,6 +86,7 @@ bool tracker::updateCalculation( void )
             }
 
             i16pan = (int16_t)(10.0 * home.degree( plane )); /* range is [-1800;+1800] , direction fixed */
+            i16pan += i16panzero;
             if( i16pan < -1800 ) i16pan += 3600; /* set range to [-1800..1800] */
             if( i16pan > +1800 ) i16pan -= 3600; 
 
@@ -137,21 +138,10 @@ int16_t tracker::readNorth( void )
     static int valadcpan = 1700;
     float valadcbat = 0.0;
     valadcpan = ( 2 * valadcpan + analogRead(POTIPIN)) / 3; // Poti value in in range of, 0..3510 (4092 is not reached)
-    i16panzero = map( valadcpan, 0, 3510, LOWPAN, HIGHPAN ); 
+    i16panzero = map( valadcpan, 0, 3840, LOWPAN, HIGHPAN ); 
     //i16panzero = 0; // big noise, try median filter?
-    //if( i16panzero != 0 ) myled.setState( LED_??, STATUS_OK );
-    //else  myled.setState( LED_POWER, STATUS_FAIL );
 
-
-    valadcbat = AKKUFACTOR * 4.0 / 4096 * analogRead(AKKUPIN); //why ?
-    AkkuVoltage = ( 10.0 * AkkuVoltage + valadcbat ) / 11.0;
-    
-
-    if( AkkuVoltage > 10.0 ) myled.setState( LED_POWER, STATUS_OK );
-    else  myled.setState( LED_POWER, STATUS_FAIL );
-
-    //Serial.println( "North voltage: " + String(AkkuVoltage) ); // Wert ausgeben
-
+    Serial.println( "North offset: " + String(i16panzero) + " / " + String(valadcpan) ); // Wert ausgeben
     return i16panzero;
 }
 
@@ -161,7 +151,6 @@ void tracker::readBattery( void )
 
     valadcbat = AKKUFACTOR * 4.0 / 4096 * analogRead(AKKUPIN); //why ?
     AkkuVoltage = ( 10.0 * AkkuVoltage + valadcbat ) / 11.0;
-    
 
     if( AkkuVoltage > 10.0 ) myled.setState( LED_POWER, STATUS_OK );
     else  myled.setState( LED_POWER, STATUS_FAIL );
