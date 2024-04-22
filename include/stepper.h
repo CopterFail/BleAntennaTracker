@@ -20,6 +20,8 @@ public:
     void loop( void ){};
     bool findIndex( void );
     void setStepper( int16_t i16AngValue );
+    void setMicroStep( int ifactor );
+
     //void setMaxSpeed( ); //deg/us ? 
     uint8_t getState( void );
 };

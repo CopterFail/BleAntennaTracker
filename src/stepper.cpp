@@ -8,18 +8,27 @@
 #include "led.h"
 #include "stepper.h"
 
-// Stepper definitions
-#define STEP_PIN  14
-#define DIR_PIN   12
-#define FAST_PIN  13
-#define INDEX_PIN 27 
+// Stepper pin definitions
+#define STEP_PIN    14    // step
+#define DIR_PIN     12    // driection
+#define SPREAD_PIN  13    // pull down for stealth shop
+#define MS1_PIN     18    // micro steps, 1-1 for 1/16, 0-0 for 1/8 
+#define MS2_PIN     19    // micro steps
+#define ENABLE_PIN  17    // pull down to enable
+#define DIAG_PIN    16    // Diag signal from tmc2209
+#define IDX_PIN     21    // Index pin from tmc2209
+
+ 
+
+#define INDEX_PIN   27    // hall sensor input (internal pullup needed)
+
 #define STEP_LIMIT (100*16*4)   // counting micro steps (1/16) and 1:4 gear for one direction
-#define FAST_FACTOR (4)       // quarter steps instead of 1/16 - works well
-//#define FAST_FACTOR (2)       // 1/8 steps instead of 1/16 - test
+//#define FAST_FACTOR (2)       // 1/8 steps instead of 1/16 - works well
+#define FAST_FACTOR (2)       // 1/8 steps instead of 1/16 - test
 #define MIN_INTERVAL  10000   // 100 Hz call frequency for new stepper values
-#define MIN_ISR_TIME  200     // 1000 Hz interrupt
+#define MIN_ISR_TIME  125     // 8000 Hz interrupt should be fast enougth
 #define MAX_ISR_TIME  10000   // 100 Hz interrupt
-#define INDEX_SIZE    (85)   // 56
+#define INDEX_SIZE    (110)   // size is 230 ... 210 not symetrically
 
 volatile int iStepperPos = 0;
 volatile int iStepperSet = 0;
@@ -102,8 +111,19 @@ void stepper::setup( bool bSimulation )
 
     pinMode( STEP_PIN, OUTPUT );
     pinMode( DIR_PIN, OUTPUT );
-    pinMode( FAST_PIN, OUTPUT );
+    pinMode( SPREAD_PIN, OUTPUT );
+    pinMode( MS1_PIN, OUTPUT );
+    pinMode( MS2_PIN, OUTPUT );
+    pinMode( ENABLE_PIN, OUTPUT );
+
+    pinMode( DIAG_PIN, INPUT );
+    pinMode( IDX_PIN, INPUT );
     pinMode( INDEX_PIN, INPUT_PULLUP );
+
+    digitalWrite(SPREAD_PIN, LOW );
+    digitalWrite(ENABLE_PIN, HIGH );
+    iStepperFactor = 1;
+    setMicroStep(iStepperFactor);
 
     iMinIsrTime = MIN_ISR_TIME;
 
@@ -135,6 +155,22 @@ uint8_t stepper::getState( void )
   return result;
 }
 
+void stepper::setMicroStep( int ifactor )
+{
+  switch( ifactor )
+  {
+    case 2: // 1/8
+      digitalWrite(MS1_PIN, LOW );
+      digitalWrite(MS2_PIN, LOW );
+      break;
+    default:
+    case 1: // 1/16
+      digitalWrite(MS1_PIN, HIGH );
+      digitalWrite(MS2_PIN, HIGH );
+      break;
+  }
+}
+
 void stepper::setStepper( int16_t i16AngValue )
 {
   int ipos, iset, idiff;
@@ -158,8 +194,8 @@ void stepper::setStepper( int16_t i16AngValue )
     idiff = -idiff;
   }
 
-  now = micros();
-  interval = now - last;
+  now = micros();  // 
+  interval = (now - last) / 2u; // we need 2 interrupts for 1 step
   last = now;
   if( interval < MIN_INTERVAL ){
       interval = MIN_INTERVAL;
@@ -179,20 +215,20 @@ void stepper::setStepper( int16_t i16AngValue )
     }
 
     if( bFast ){ 
-      digitalWrite(FAST_PIN, LOW);
-      iStepperFactor = FAST_FACTOR; // set full steps
+      iStepperFactor = FAST_FACTOR; // set faster steps
     }else{
-      digitalWrite(FAST_PIN, HIGH); // set quarter steps
-      iStepperFactor = 1;
+      iStepperFactor = 1; // set 1/16 steps
     }
+    setMicroStep(iStepperFactor);
     iStepperSet = iset;
+    digitalWrite(ENABLE_PIN, LOW );
     timerAlarmWrite(timer, isrtime, true);  		
+    timerAlarmEnable(timer);
 
     if( bSim ){
       //Serial.println( String(interval/idiff) + " / " + String(isrtime) + " / " + String(iStepperFactor) ); 
-      //Serial.println( String(i16AngValue) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
-      Serial.println( String(iDebug));
+      Serial.println( String(i16AngValue) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
+      //Serial.println( String(iDebug));
     }
-    timerAlarmEnable(timer);
   }
 }
