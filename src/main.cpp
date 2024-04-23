@@ -29,7 +29,7 @@ void setup()
   BLE_setup( true );
   mytracker.setup( true );
   myservo.setup( false );
-  mystepper.setup( true );
+  mystepper.setup( false );
   mybutton.setup( false );
 
   Serial.println("... End of setup");
@@ -71,11 +71,13 @@ void loop()
       //mystepper.setStepper( 900 /*mytracker.readNorth()*/ );  // point north
       // adjust with poti
       myled.loop();
+      mystepper.loop();
       delay( 20 );
     }
   }
 
 // todo: myanalog.loop(); is still missing.... see north and akku
+  mystepper.loop();
   mybutton.loop();
   myled.loop();
   delay(50);

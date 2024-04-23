@@ -44,9 +44,14 @@ private:
     int16_t i16tiltzero = 0;
 
     float AkkuVoltage =0.0f;
+
     float simAng = 0.f;
     float simDir = 1.0f;
     float simHeight = 0.0f;
+    uint32_t simLast = 0;
+    uint32_t simNow = 0;
+    const uint32_t simInterval = 500;
+
 
 public:
     tracker(/* args */){};
@@ -60,10 +65,11 @@ public:
     int16_t getPan( void ){ return i16pan; }
     int16_t getTilt( void ){ return i16tilt; };
     void setServos( int16_t i16pan, int16_t i16tilt );
-    int16_t readNorth( void );
-    void readBattery( void );
     bool isHomeSet( void ){ return bHomeIsSet; };
     bool isPlaneSet( void ){ return bPlaneIsSet; };
+
+    int16_t readNorth( void );
+    void readBattery( void );
 };
 
 #endif

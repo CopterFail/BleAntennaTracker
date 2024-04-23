@@ -18,8 +18,6 @@
 #define DIAG_PIN    16    // Diag signal from tmc2209
 #define IDX_PIN     21    // Index pin from tmc2209
 
- 
-
 #define INDEX_PIN   27    // hall sensor input (internal pullup needed)
 
 #define STEP_LIMIT (100*16*4)   // counting micro steps (1/16) and 1:4 gear for one direction
@@ -126,6 +124,7 @@ void stepper::setup( bool bSimulation )
     setMicroStep(iStepperFactor);
 
     iMinIsrTime = MIN_ISR_TIME;
+    u32setpointInterval = MAX_ISR_TIME;
 
     timer = timerBegin(0, 80, true);           	// timer 0, prescalar: 80, UP counting
     timerAttachInterrupt(timer, &onTimer, true); 	// Attach interrupt
@@ -141,9 +140,11 @@ bool stepper::findIndex( void )
     for( int i=0; (i<(STEP_LIMIT*2)) && (bIndexFound == false); i+=60 ){
       iStepperPos = 0;
       setStepper( 60 );
+      loop();
       delay( 50 );
     }
     setStepper( 0 );
+    loop();
     delay( 1000 );
     iMinIsrTime = MIN_ISR_TIME;
     return bIndexFound;
@@ -171,38 +172,33 @@ void stepper::setMicroStep( int ifactor )
   }
 }
 
-void stepper::setStepper( int16_t i16AngValue )
+void stepper::loop( void )
+{
+  filter();
+  update();
+}
+
+void stepper::update( void )
 {
   int ipos, iset, idiff;
   int isrtime;
-  static unsigned long last = 0;
-  unsigned long now;
-  unsigned long interval;
   bool bFast = false;
   
-  static int16_t Value = i16AngValue;
-
-  Value = (3 * Value + i16AngValue ) / 4; // filter i16AngValue
-
   timerAlarmDisable(timer);
 
   ipos = iStepperPos;
-  iset = map(Value, -1800,1800,-STEP_LIMIT,+STEP_LIMIT);
+  iset = map( i16AngFiltered, -1800,1800,-STEP_LIMIT,+STEP_LIMIT );
   idiff = iset - ipos;
   if( idiff < 0 )
   { 
     idiff = -idiff;
   }
 
-  now = micros();  // 
-  interval = (now - last) / 2u; // we need 2 interrupts for 1 step
-  last = now;
-  if( interval < MIN_INTERVAL ){
-      interval = MIN_INTERVAL;
-  }
-
   if( idiff > 0 ){
-    isrtime = interval / idiff; 
+
+    // isrtime is time per step 125 ... 10000 -> 8000 ... 100 Steps/s
+    isrtime = u32setpointInterval / idiff; // isrtime is time per step -> 8000 ... 100 Steps/s (for 1/16)
+
     if( isrtime < iMinIsrTime ){
       isrtime *= FAST_FACTOR;
       bFast = true;
@@ -226,9 +222,31 @@ void stepper::setStepper( int16_t i16AngValue )
     timerAlarmEnable(timer);
 
     if( bSim ){
-      //Serial.println( String(interval/idiff) + " / " + String(isrtime) + " / " + String(iStepperFactor) ); 
-      Serial.println( String(i16AngValue) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
+      Serial.println( String(u32setpointInterval) + " / " + String(isrtime) + " / " + String(iStepperFactor) ); 
+      Serial.println( String(i16AngFiltered) + " / " + String(iStepperSet) + " / " + String(iStepperPos) ); 
       //Serial.println( String(iDebug));
     }
   }
+}
+
+void stepper::filter( void )
+{
+  const int16_t i16FilterLevel = 2;
+  i16AngFiltered = (i16FilterLevel * i16AngFiltered + i16AngSetpoint ) / (i16FilterLevel+1); 
+}
+
+void stepper::setStepper( int16_t i16NewAngValue )
+{
+  static uint32_t u32last = 0;
+  uint32_t  u32now;
+
+  u32now = micros();  // 
+  u32setpointInterval = (u32now - u32last) / 2u; // we need 2 interrupts for 1 step
+  u32last = u32now;
+  if( u32setpointInterval < MIN_INTERVAL ){
+      u32setpointInterval = MIN_INTERVAL;
+  }
+
+  i16AngSetpoint = i16NewAngValue;
+  //loop();
 }

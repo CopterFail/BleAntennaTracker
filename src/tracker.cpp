@@ -53,7 +53,6 @@ bool tracker::updateCalculation( void )
 {
     bool result = false;
     float distance = 0.0;
-    static int16_t i16GpsPacketCount = 11;
 
     if( bSim || (crsf.getLatestGps( plane ) && plane.getSatelites() >= MINSATELITES ))
     {
@@ -78,11 +77,20 @@ bool tracker::updateCalculation( void )
             bPlaneIsSet = true;
             if( bSim )
             {
-              plane.simulate( home, 500, simAng, simHeight );
+
               simAng += simDir;
               simHeight += 10.0f;
               if( simAng > 100 ){ simDir = -1; simHeight = 0.0f; }
               else if( simAng < -100 ){ simDir = +1; }
+
+              simNow = millis();
+              if( (simNow - simLast) > simInterval ){
+                plane.simulate( home, 500, simAng, simHeight );
+                simLast = simNow;
+              }else{
+                return false;
+              }
+          
             }
 
             i16pan = (int16_t)(10.0 * home.degree( plane )); /* range is [-1800;+1800] , direction fixed */
@@ -92,6 +100,8 @@ bool tracker::updateCalculation( void )
 
             i16tilt = home.tilt( plane ) * (10); /* range is [0;900]*/
             i16tilt += i16tiltzero;
+
+            distance = home.dist( plane );
             
             // limit angles to the hardware range
             if( i16tilt < LOWTILT )  i16tilt = LOWTILT;
@@ -103,7 +113,7 @@ bool tracker::updateCalculation( void )
             Serial.println( "home: " + String(home.getLat()) + "/" + String(home.getLon()) );
             Serial.println( "plane: " + String(plane.getLat()) + "/" + String(plane.getLon()) );
 #endif
-            distance = home.dist( plane );
+            
             Serial.println(" Dist:" + String(distance) + " Ang:" + String(i16pan) + " Tilt:" + String(i16tilt));
         }
     }   
@@ -141,7 +151,7 @@ int16_t tracker::readNorth( void )
     i16panzero = map( valadcpan, 0, 3840, LOWPAN, HIGHPAN ); 
     //i16panzero = 0; // big noise, try median filter?
 
-    Serial.println( "North offset: " + String(i16panzero) + " / " + String(valadcpan) ); // Wert ausgeben
+    //Serial.println( "North offset: " + String(i16panzero) + " / " + String(valadcpan) ); // Wert ausgeben
     return i16panzero;
 }
 
