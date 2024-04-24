@@ -21,12 +21,6 @@
 
 #define MINSATELITES    (4) // 4 is for indoor testing
 
-#define POTIPIN 34
-#define AKKUPIN 35
-
-#define AKKUFACTOR (10.7f)
-
-
 
 class tracker
 {
@@ -43,7 +37,6 @@ private:
     int16_t i16panzero = 0;
     int16_t i16tiltzero = 0;
 
-    float AkkuVoltage =0.0f;
 
     float simAng = 0.f;
     float simDir = 1.0f;
@@ -61,6 +54,8 @@ public:
     bool loop( void );
     bool setHome( void );
     void setPlane( gps &p );
+    void setPanZero( int16_t i16NewZero );
+
     bool updateCalculation( void );
     int16_t getPan( void ){ return i16pan; }
     int16_t getTilt( void ){ return i16tilt; };
@@ -68,8 +63,6 @@ public:
     bool isHomeSet( void ){ return bHomeIsSet; };
     bool isPlaneSet( void ){ return bPlaneIsSet; };
 
-    int16_t readNorth( void );
-    void readBattery( void );
 };
 
 #endif

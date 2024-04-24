@@ -91,7 +91,7 @@ float gps::degree( gps &b)
     if(fDiffDeg > +2.0 ) fDiffDeg = +2.0;
     if(fDiffDeg < -2.0 ) fDiffDeg = -2.0;
     fLastBearingDeg = fBearingDeg;
-    //fBearingDeg += fDiffDeg; test this laster....
+    fBearingDeg += fDiffDeg; //test this laster....
 
     return fBearingDeg;
 }

@@ -1,5 +1,5 @@
 /**
- * GPS class
+ * led class
  * by CopterFail 2024
 */
 

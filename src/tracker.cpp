@@ -17,7 +17,6 @@
 
 Preferences preferences;
 crsf_telemetrie crsf; 
-extern led myled;
 
 void  tracker::setup( bool bSimulation )
 {
@@ -139,29 +138,7 @@ bool tracker::setHome( void )
   return result;
 }
 
-int16_t tracker::readNorth( void )
+void tracker::setPanZero( int16_t i16NewZero )
 {
-    static int valadcpan = 1700;
-    float valadcbat = 0.0;
-    valadcpan = ( 2 * valadcpan + analogRead(POTIPIN)) / 3; // Poti value in in range of, 0..3510 (4092 is not reached)
-    i16panzero = map( valadcpan, 0, 3840, LOWPAN, HIGHPAN ); 
-    //i16panzero = 0; // big noise, try median filter?
-
-    //Serial.println( "North offset: " + String(i16panzero) + " / " + String(valadcpan) ); // Wert ausgeben
-    return i16panzero;
+  i16panzero = map( i16NewZero, 0, 3840, LOWPAN, HIGHPAN ); 
 }
-
-void tracker::readBattery( void )
-{
-    float valadcbat = 0.0;
-
-    valadcbat = AKKUFACTOR * 4.0 / 4096 * analogRead(AKKUPIN); //why ?
-    AkkuVoltage = ( 10.0 * AkkuVoltage + valadcbat ) / 11.0;
-
-    if( AkkuVoltage > 10.0 ) myled.setState( LED_POWER, STATUS_OK );
-    else  myled.setState( LED_POWER, STATUS_FAIL );
-
-    //Serial.println( "Battery: " + String(AkkuVoltage) );
-}
-
-

@@ -12,11 +12,13 @@
 #include "servo.h"
 #include "stepper.h"
 #include "button.h"
+#include "analog.h"
 
 tracker mytracker;
 led myled;
 servo myservo;
 stepper mystepper;
+analog myanalog;
 extern button mybutton;
 
 
@@ -26,11 +28,12 @@ void setup()
   Serial.begin(115200);
   Serial.println("Starting BLE Client Antenna Tracker Application V0.0.1");
   myled.setup(); //start LED at first
-  BLE_setup( false );
-  mytracker.setup( false );
+  BLE_setup( true );
+  mytracker.setup( true );
   myservo.setup( false );
   mystepper.setup( false );
   mybutton.setup( false );
+  myanalog.setup( false );
 
   Serial.println("... End of setup");
 }
@@ -58,8 +61,8 @@ void loop()
   myled.setState( LED_HOME, mytracker.isHomeSet() ? STATUS_OK : STATUS_WAIT );
 
 // todo: myanalog.loop(); is still missing.... see north and akku
-  (void)mytracker.readNorth();
-  mytracker.readBattery();
+  mytracker.setPanZero( myanalog.readNorth() );
+  myanalog.readBattery();
 
   if( mybutton.bPressedBlue ) // blue button (right) tries to set home, if gps is valid
   {
@@ -71,7 +74,7 @@ void loop()
     myled.flash( true );
     for( int i=0; i<500; i++ )
     {
-      mystepper.setStepper( mytracker.readNorth() );  // point north
+      mystepper.setStepper( myanalog.readNorth() );  // point north
       //mystepper.setStepper( 900 /*mytracker.readNorth()*/ );  // point north
       // adjust with poti
       myled.loop();
@@ -83,5 +86,7 @@ void loop()
   mystepper.loop();
   mybutton.loop();
   myled.loop();
+  myanalog.loop();
+
   delay(50);
 }
