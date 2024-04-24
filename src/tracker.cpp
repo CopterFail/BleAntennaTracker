@@ -41,11 +41,7 @@ void  tracker::setup( bool bSimulation )
 bool tracker::loop( void )
 {
   bool result = false;
-
-  (void)readNorth();
-  readBattery();
   result = updateCalculation();
-
   return result;
 }
 

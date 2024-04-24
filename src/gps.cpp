@@ -85,11 +85,15 @@ float gps::degree( gps &b)
     float bearing_rad = atan2f(y, x);
 
     // Umwandlung von Radiant in Grad
-    float bearing_deg = rad2deg(bearing_rad);
+    fBearingDeg = rad2deg(bearing_rad);
 
-    // Umwandlung von einem -180/+180 Grad System in ein 0/360 Grad System
-    //bearing_deg = fmod(bearing_deg + 360.0, 360.0);
-    return bearing_deg;
+    float fDiffDeg = fBearingDeg - fLastBearingDeg;
+    if(fDiffDeg > +2.0 ) fDiffDeg = +2.0;
+    if(fDiffDeg < -2.0 ) fDiffDeg = -2.0;
+    fLastBearingDeg = fBearingDeg;
+    //fBearingDeg += fDiffDeg; test this laster....
+
+    return fBearingDeg;
 }
 
 float gps::tilt( gps &b )

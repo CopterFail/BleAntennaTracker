@@ -18,6 +18,8 @@ private:
     int32_t i32alt;         /* altitude in [m], offset is 1000 ? */
     int8_t i8sats;          /* number of received satelites */
     /* groundSpeed [km/h *10], groundCourse [degree * 1e2]*/
+    float fBearingDeg = 0.0f;
+    float fLastBearingDeg = 0.0f;
 public:
     gps();
     gps( int32_t i32latitude, int32_t i32longitude, int8_t i8satelites=0, int32_t i32altitude=0 );
