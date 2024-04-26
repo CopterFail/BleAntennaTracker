@@ -4,10 +4,12 @@
 #ifndef hardwarepins
 #define hardwarepins
 
-#define ESP32_PINOUT
-//#define ESP32C3_PINOUT
+//#define PLATFORM_ESP32
+#define PLATFORM_ESP32_C3
 
-#ifdef ESP32_PINOUT 
+
+
+#ifdef PLATFORM_ESP32
 
 //button.cpp:
 #define BLUE_BUTTON_PIN     25
@@ -31,11 +33,14 @@
 //#define IDX_PIN             21    // Index pin from tmc2209
 #define INDEX_PIN           27    // hall sensor input (internal pullup needed)
 
+#define POTIPIN 34
+#define AKKUPIN 35
+
 #endif
 
 
 
-#ifdef ESP32C3_PINOUT 
+#ifdef PLATFORM_ESP32_C3 
 
 //button.cpp:
 #define BLUE_BUTTON_PIN     0
@@ -58,6 +63,10 @@
 //#define DIAG_PIN            16    // Diag signal from tmc2209
 //#define IDX_PIN             21    // Index pin from tmc2209
 #define INDEX_PIN           10   // hall sensor input (internal pullup needed)
+
+#define POTIPIN 1
+#define AKKUPIN 0
+
 
 #endif
 

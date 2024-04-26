@@ -2,9 +2,7 @@
 #include <Arduino.h>
 #include "analog.h"
 #include "led.h"
-
-#define POTIPIN 34
-#define AKKUPIN 35
+#include "hardware.h"
 
 #define AKKUFACTOR (10.7f)
 
