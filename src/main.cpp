@@ -28,8 +28,8 @@ void setup()
   Serial.begin(115200);
   Serial.println("Starting BLE Client Antenna Tracker Application V0.0.1");
   myled.setup(); //start LED at first
-  BLE_setup( false );
-  mytracker.setup( false );
+  BLE_setup( true );
+  mytracker.setup( true );
   myservo.setup( false );
   mystepper.setup( false );
   mybutton.setup( false );

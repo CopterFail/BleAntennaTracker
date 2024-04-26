@@ -15,8 +15,10 @@ void servo::setup( bool bSimulation )
         Serial.println("Simulation for servo is active ");
     }
     // Init the 2 servo pwm channels
+    #ifdef PANPIN
     chPan = PWM.allocate( PANPIN, 50 ); 
     PWM.setDuty( chPan, 20000 );  // 20ms duty
+    #endif
     chTilt = PWM.allocate( TILTPIN, 50 ); 
     PWM.setDuty( chTilt, 20000 );  // 20ms duty
 
@@ -41,7 +43,9 @@ void servo::setServos( int16_t i16Pan, int16_t i16Tilt )
     }
     else
     {
+        #ifdef PANPIN
         PWM.setMicroseconds( chPan, i16PanPWM );
+        #endif
         PWM.setMicroseconds( chTilt, i16TiltPWM);
     }
 }

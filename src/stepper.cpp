@@ -98,17 +98,27 @@ void stepper::setup( bool bSimulation )
 
     pinMode( STEP_PIN, OUTPUT );
     pinMode( DIR_PIN, OUTPUT );
-    pinMode( SPREAD_PIN, OUTPUT );
     pinMode( MS1_PIN, OUTPUT );
+    #ifdef MS2_PIN
     pinMode( MS2_PIN, OUTPUT );
-    pinMode( ENABLE_PIN, OUTPUT );
+    #endif
 
-    //pinMode( DIAG_PIN, INPUT );
+    #ifdef SPREAD_PIN
+    pinMode( SPREAD_PIN, OUTPUT );
+    digitalWrite(SPREAD_PIN, LOW );
+    #endif
+
+    #ifdef ENABLE_PIN
+    digitalWrite(ENABLE_PIN, HIGH );
+    pinMode( ENABLE_PIN, OUTPUT );
+    #endif
+
+    #ifdef DIAG_PIN
+    pinMode( DIAG_PIN, INPUT );
+    #endif
     //pinMode( IDX_PIN, INPUT );
     pinMode( INDEX_PIN, INPUT_PULLUP );
 
-    digitalWrite(SPREAD_PIN, LOW );
-    digitalWrite(ENABLE_PIN, HIGH );
     iStepperFactor = 1;
     setMicroStep(iStepperFactor);
 
@@ -151,12 +161,16 @@ void stepper::setMicroStep( int ifactor )
   {
     case 2: // 1/8
       digitalWrite(MS1_PIN, LOW );
-      digitalWrite(MS2_PIN, LOW );
+      #ifdef MS2_PIN
+        digitalWrite(MS2_PIN, LOW );
+      #endif
       break;
     default:
     case 1: // 1/16
       digitalWrite(MS1_PIN, HIGH );
+      #ifdef MS2_PIN
       digitalWrite(MS2_PIN, HIGH );
+      #endif
       break;
   }
 }
@@ -206,7 +220,9 @@ void stepper::update( void )
     }
     setMicroStep(iStepperFactor);
     iStepperSet = iset;
+    #ifdef ENABLE_PIN
     digitalWrite(ENABLE_PIN, LOW );
+    #endif
     timerAlarmWrite(timer, isrtime, true);  		
     timerAlarmEnable(timer);
 
