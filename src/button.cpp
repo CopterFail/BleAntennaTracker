@@ -5,9 +5,7 @@
 
 #include <Arduino.h>
 #include "button.h"
-
-#define BLUE_BUTTON_PIN 25
-#define RED_BUTTON_PIN 26
+#include "hardware.h"
 
 button mybutton;
 

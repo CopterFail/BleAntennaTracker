@@ -27,8 +27,9 @@ void analog::loop( void )
 {
 }
 
-int16_t analog::median5( int16_t *values )
+int16_t analog::median5( int16_t a, int16_t b, int16_t c, int16_t d, int16_t e )
 {
+    int16_t values[5] = {a,b,c,d,e};
     // Sortiere die Zahlen
     for (int i = 0; i < 5 - 1; i++) {
         for (int j = 0; j < 5 - i - 1; j++) {
@@ -50,7 +51,7 @@ int16_t analog::readNorth( void )
     
     values[ index ] = analogRead(POTIPIN);
     index = (index+1) % 5;
-    v = median5(values);
+    v = median5(values[0], values[1], values[2], values[3], values[4]);
 
     valadcpan = ( 2 * valadcpan + v ) / 3; // Poti value in in range of, 0..3510 (4092 is not reached)
 
@@ -68,7 +69,8 @@ int16_t analog::readBattery( void )
     
     values[ index ] = analogRead(AKKUPIN);
     index = (index+1) % 5;
-    v = median5(values);
+    v = median5(values[0], values[1], values[2], values[3], values[4]);
+
 
     valadcbat = AKKUFACTOR * 4.0 / 4096 * float(v); 
     AkkuVoltage = ( 10.0 * AkkuVoltage + valadcbat ) / 11.0;

@@ -99,6 +99,7 @@ pwm_channel_t PWMController::allocate(uint8_t pin, uint32_t frequency)
     // 1. see if we can allocate a MCPWM channel at this frequency
     int channel = -1;
     // 1a. see if theres a MCPWM already using this frequency we can piggy-back on
+#if 1 //for a test of led channels set to 0
     for (int i = 0; i < MCPWM_CHANNELS; i++)
     {
         if (mcpwm_frequencies[i] == frequency)
@@ -143,9 +144,10 @@ pwm_channel_t PWMController::allocate(uint8_t pin, uint32_t frequency)
         }
         mcpwm_init(mcpwm_config[channel].unit, mcpwm_config[channel].timer, &pwm_config);
         mcpwm_frequencies[channel] = frequency;
+        Serial.println("allocate mcpwm ");
         return channel | MCPWM_CHANNEL_FLAG;
     }
-
+#endif
     // 2. try for a LEDC channel
     for (int ch = 0; ch < LEDC_CHANNELS; ch++)
     {
@@ -175,6 +177,7 @@ pwm_channel_t PWMController::allocate(uint8_t pin, uint32_t frequency)
                     ledc_config[ch].resolution_bits = bits;
                     ledc_config[ch].interval = 1000000U / frequency;
                     DBGLN("allocate ledc_ch %d on pin %d using ledc_tim: %d, bits: %d", ch, pin, timer_idx, bits);
+                    Serial.println("allocate ledc_ch ");
                     return ch | LEDC_CHANNEL_FLAG;
                 }
             }

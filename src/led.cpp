@@ -3,9 +3,10 @@
 
 #include <NeoPixelBus.h>
 #include "led.h"
+#include "hardware.h"
 
 const uint16_t PixelCount = 8; // this example assumes 4 pixels, making it smaller will cause a failure
-const uint8_t DotDataPin = 23;  
+const uint8_t DotDataPin = LED_PIN;  
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, DotDataPin);
 
 

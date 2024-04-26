@@ -7,18 +7,7 @@
 #include <Arduino.h>
 #include "led.h"
 #include "stepper.h"
-
-// Stepper pin definitions
-#define STEP_PIN    14    // step
-#define DIR_PIN     12    // driection
-#define SPREAD_PIN  13    // pull down for stealth shop
-#define MS1_PIN     18    // micro steps, 1-1 for 1/16, 0-0 for 1/8 
-#define MS2_PIN     19    // micro steps
-#define ENABLE_PIN  17    // pull down to enable
-#define DIAG_PIN    16    // Diag signal from tmc2209
-#define IDX_PIN     21    // Index pin from tmc2209
-
-#define INDEX_PIN   27    // hall sensor input (internal pullup needed)
+#include "hardware.h"
 
 #define STEP_LIMIT (100*16*4)   // counting micro steps (1/16) and 1:4 gear for one direction
 //#define FAST_FACTOR (2)       // 1/8 steps instead of 1/16 - works well
@@ -114,8 +103,8 @@ void stepper::setup( bool bSimulation )
     pinMode( MS2_PIN, OUTPUT );
     pinMode( ENABLE_PIN, OUTPUT );
 
-    pinMode( DIAG_PIN, INPUT );
-    pinMode( IDX_PIN, INPUT );
+    //pinMode( DIAG_PIN, INPUT );
+    //pinMode( IDX_PIN, INPUT );
     pinMode( INDEX_PIN, INPUT_PULLUP );
 
     digitalWrite(SPREAD_PIN, LOW );

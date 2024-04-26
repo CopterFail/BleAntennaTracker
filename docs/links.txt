@@ -1,0 +1,15 @@
+https://www.sudo.is/docs/esphome/boards/esp32c3supermini/ are pin reserved?
+
+Needed: 
+2 x button
+1 x ledstrip
+1 x poti AIN
+1 x power AIN
+1 x servo PWM
+1 x step DO
+1 x dir DO
+2 x microstep select DO (maybe only one?)
+1 x enable DO (may be fixed)
+0 x status DI (?)
+
+11 pins, this is the maximum, 

@@ -2,9 +2,7 @@
 #include "PWM.h"
 #include "tracker.h"
 #include "servo.h"
-
-#define PANPIN  2
-#define TILTPIN 4
+#include "hardware.h"
 
 PWMController PWM;
 pwm_channel_t chPan, chTilt;
