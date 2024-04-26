@@ -47,11 +47,11 @@
 #define RED_BUTTON_PIN      7
 
 //led.cpp
-#define LED_PIN             8
+#define LED_PIN             8   // pin 8 is also used by the blue status led
 
 // servo.cpp
 //#define PANPIN              
-#define TILTPIN             9
+#define TILTPIN             9   // pin 9 is also used by the boot button
 
 // stepper.cpp, Stepper pin definitions
 #define STEP_PIN            1    // step
@@ -64,8 +64,8 @@
 //#define IDX_PIN             21    // Index pin from tmc2209
 #define INDEX_PIN           10   // hall sensor input (internal pullup needed)
 
-#define POTIPIN             4   // analog input
-#define AKKUPIN             3   // analog input, pin 5 does not work
+#define POTIPIN             4   // pin 4 is analog input adc1
+#define AKKUPIN             3   // pin 3 is analog input adc1, pin 5 is analog input adc2 - does not work
 
 
 #endif
