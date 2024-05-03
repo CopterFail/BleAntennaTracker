@@ -117,7 +117,7 @@ class Crsf
     uint16_t syncByteErrorCounter;
     uint16_t crcErrorCounter;
     
-    uint16_t channels[CRSF_NUMBER_OF_CHANNELS];
+    //uint16_t channels[CRSF_NUMBER_OF_CHANNELS];
 
     uint16_t validRcChannelsMessagesCounter;
     uint16_t validLinkStatisticsMessagesCounter;

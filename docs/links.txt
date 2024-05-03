@@ -13,3 +13,6 @@ Needed:
 0 x status DI (?)
 
 11 pins, this is the maximum, 
+
+
+https://learn.watterott.com/de/silentstepstick/pinconfig/tmc2209/

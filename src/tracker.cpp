@@ -16,7 +16,7 @@
 #define ARM_CHANNEL   4
 
 Preferences preferences;
-crsf_telemetrie crsf; 
+extern Crsf mycrsf; 
 
 void  tracker::setup( bool bSimulation )
 {
@@ -49,7 +49,7 @@ bool tracker::updateCalculation( void )
     bool result = false;
     float distance = 0.0;
 
-    if( bSim || (crsf.getLatestGps( plane ) && plane.getSatelites() >= MINSATELITES ))
+    if( bSim || (mycrsf.getLatestGps( plane ) && plane.getSatelites() >= MINSATELITES ))
     {
         result = true;
         if( !bHomeIsSet )

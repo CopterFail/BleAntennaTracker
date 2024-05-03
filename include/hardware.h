@@ -55,7 +55,7 @@
 
 // stepper.cpp, Stepper pin definitions
 #define STEP_PIN            1    // step
-#define DIR_PIN             0    // driection
+#define DIR_PIN             0    // direction
 //#define SPREAD_PIN          7    // pull down for stealth shop, always low, 20 is rx, 21 tx
 #define MS1_PIN             2    // micro steps, 1-1 for 1/16, 0-0 for 1/8 , so it can drive both pins
 //#define MS2_PIN             5    // micro steps
@@ -67,8 +67,10 @@
 #define POTIPIN             4   // pin 4 is analog input adc1
 #define AKKUPIN             3   // pin 3 is analog input adc1, pin 5 is analog input adc2 - does not work
 
+#define RX_PIN              20
+#define TX_PIN              21
 
-#endif
+#endif //platform
 
 
-#endif
+#endif // header

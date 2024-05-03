@@ -32,7 +32,7 @@ static bool bSim = false;
 static void BLE_scan( void );
 
 
-extern crsf_telemetrie crsf; 
+extern Crsf mycrsf; 
 
 void notifyCallback(
   BLERemoteCharacteristic* pBLERemoteCharacteristic,
@@ -48,7 +48,7 @@ void notifyCallback(
     Serial.print("data: ");
     */
     //Serial.println((char*)pData);
-    crsf.parseData(pData, length, isNotify );
+    mycrsf.parseData(pData, length, isNotify );
 }
 
 

@@ -11,18 +11,83 @@
 #include "crsf_telemetrie.h"
 #include "gps.h"
 
+/*
+static inline uint8_t ICACHE_RAM_ATTR CalcCRCMsp(uint8_t *data, int length)
+{
+    uint8_t crc = 0;
+    for (uint8_t i = 0; i < length; ++i) {
+        crc = crc ^ *data++;
+    }
+    return crc;
+}
+*/
 
-crsf_telemetrie::crsf_telemetrie()
+Crsf::Crsf()
 {
 }
 
 
-crsf_telemetrie::~crsf_telemetrie()
+Crsf::~Crsf()
 {
 
 }
 
-void crsf_telemetrie::dumpData( uint8_t* pData, size_t length)
+void Crsf::setup( bool bsimulation, HardwareSerial* serialPort_  )
+{
+    serialPort = serialPort_;
+}
+
+bool Crsf::loop( void )
+{
+    update();
+    //return !failsafeIsActive;
+    return true;
+}
+
+void Crsf::update( void )
+{
+  while(serialPort->available())
+  {
+    addByteToMessage(serialPort->read());
+    
+    lastTimeByteReceived = millis();
+
+    if((messageIndex > CRSF_MIN_MESSAGE_LENGTH) && (messageIndex == message[CRSF_LENGTH_BYTE_MESSAGE_INDEX]+2)) {
+      parseData( &message[0], (size_t)message[CRSF_LENGTH_BYTE_MESSAGE_INDEX]+2, true );
+      resetMessage();
+    }
+  }
+
+  if (millis() - lastTimeByteReceived > CRSF_INCOMING_MESSAGE_TIMEOUT_TIME && messageIndex > 0) {
+    messageTimeoutErrorCounter++;
+    resetMessage();
+  }
+
+  if(millis() - lastTimeRcChannelsMessageWasValid > CRSF_CONNECTION_LOST_FAILSAFE_TIME) {
+    failsafeIsActive = true;
+  }
+  else {
+    failsafeIsActive = false;
+  }
+}
+
+void Crsf::addByteToMessage(byte byte_)
+{
+  if (messageIndex < CRSF_MAX_MESSAGE_LENGTH - 1) {
+    message[messageIndex] = byte_;
+    messageIndex++;
+  }
+}
+
+void Crsf::resetMessage()
+{
+  for(uint8_t i=0; i<CRSF_MAX_MESSAGE_LENGTH; i++) {
+    message[i] = 0;
+  }
+  messageIndex = 0;
+}
+
+void Crsf::dumpData( uint8_t* pData, size_t length)
 {
 #if 1
     static const char hex_table[] = "0123456789ABCDEF";
@@ -39,12 +104,23 @@ void crsf_telemetrie::dumpData( uint8_t* pData, size_t length)
 #endif
 }
 
-bool crsf_telemetrie::parseData( uint8_t* pData, size_t length, bool isNotify)
+bool Crsf::parseData( uint8_t* pData, size_t length, bool isNotify)
 {
     bool result = false;
 
-    if( checkTelegram( pData, length ) == true ){
-        switch( pData[CRSF_TELEMETRY_TYPE_INDEX] ){
+    if( checkSync( pData, length ) == false ){
+        return false;
+    }
+
+    if( checkCrc( pData, length ) == false ){
+        return false;
+    }
+
+    if( checkAddress( pData, length ) == false ){
+        return false;
+    }
+
+    switch( pData[CRSF_TELEMETRY_TYPE_INDEX] ){
         case CRSF_FRAMETYPE_GPS:
             result = readGps( pData, length );
             break;
@@ -53,12 +129,17 @@ bool crsf_telemetrie::parseData( uint8_t* pData, size_t length, bool isNotify)
             result = readBaro(pData, length );
             break;
         case CRSF_FRAMETYPE_RC_CHANNELS_PACKED:
-            // read rc channels, including ARM?
+            // read rc channels, including ARM
             result = readChannel(pData, length );
             break;
-
         case CRSF_FRAMETYPE_LINK_STATISTICS:
             result = readLinkStatistic(pData, length );
+            break;
+        case CRSF_FRAMETYPE_LINK_STATISTICS_TX:
+            //result = readLinkStatistic(pData, length );
+            break;
+        case CRSF_FRAMETYPE_LINK_STATISTICS_RX:
+            //result = readLinkStatistic(pData, length );
             break;
         case CRSF_FRAMETYPE_OPENTX_SYNC:
             result = readOtxSync(pData, length );
@@ -84,30 +165,44 @@ bool crsf_telemetrie::parseData( uint8_t* pData, size_t length, bool isNotify)
             break;
         }
 
-    }
-
     if( result == true ){
     }
 
     return result;
 }
 
-bool crsf_telemetrie::checkTelegram( uint8_t* pData, size_t length )
+bool Crsf::checkAddress( uint8_t* pData, size_t length )
 {
     bool result = false;
-    if( pData[CRSF_TELEMETRY_ADDRESS_INDEX] == CRSF_ADDRESS_RADIO_TRANSMITTER ){
+    uint8_t u8Addr = pData[CRSF_TELEMETRY_ADDRESS_INDEX];
+    switch(u8Addr){
+    case CRSF_ADDRESS_RADIO_TRANSMITTER: // we get this when receiving BLE telemetry from ELRS transmitter
         result = true;
-    }else{
-        Serial.println("CRSF_TELEMETRY_ADDRESS_FAIL");
+        break;
+    case CRSF_ADDRESS_FLIGHT_CONTROLLER: // we get this when receiving ELRS packets from ELRS transmitter 
+        result = true;
+        break;
+    default:
+        Serial.println("CRSF_TELEMETRY_ADDRESS_FAIL: " + String((unsigned char)u8Addr, (unsigned char)16u ) );
         result = false;
+        break;
     }
-
-    //todo: crc, length
-
     return result;
 }
 
-bool crsf_telemetrie::readGps( uint8_t* pData, size_t length )
+bool Crsf::checkCrc( uint8_t* pData, size_t length )
+{
+    bool result = true;
+    //  if(CalcCRCMsp(&message[CRSF_TYPE_BYTE_MESSAGE_INDEX], message[CRSF_LENGTH_BYTE_MESSAGE_INDEX]-1) == message[message[CRSF_LENGTH_BYTE_MESSAGE_INDEX]+1]) {
+    return result;
+}
+
+inline bool Crsf::checkSync( uint8_t* pData, size_t length )
+{
+    return (pData[CRSF_SYNC_BYTE_MESSAGE_INDEX] == CRSF_SYNC_BYTE);
+}
+
+bool Crsf::readGps( uint8_t* pData, size_t length )
 {
     bool result = false;
 
@@ -140,7 +235,7 @@ bool crsf_telemetrie::readGps( uint8_t* pData, size_t length )
     return result;
 }
 
-bool crsf_telemetrie::readBaro( uint8_t* pData, size_t length )
+bool Crsf::readBaro( uint8_t* pData, size_t length )
 {
     bool result = false;
 #if 1
@@ -150,10 +245,10 @@ bool crsf_telemetrie::readBaro( uint8_t* pData, size_t length )
     return result;
 }
 
-bool crsf_telemetrie::readChannel( uint8_t* pData, size_t length )
+bool Crsf::readChannel( uint8_t* pData, size_t length )
 {
     bool result = false;
-
+#if 0
 #define CRSF_NUMBER_OF_CHANNELS 12
 #define CRSF_RAW_CHANNEL_MIN  172
 #define CRSF_RAW_CHANNEL_MAX 1812
@@ -191,19 +286,39 @@ bool crsf_telemetrie::readChannel( uint8_t* pData, size_t length )
             channels[i] = CRSF_CHANNEL_MAX;
         }
     } 
-
+#endif
+    memcpy( (void *)&channels, &pData[3], length-3);
 #if 0
-    Serial.print( "CHANNEL_FRAME: " );
-    dumpData( pData, length );
-    Serial.print( String(channels[0]) + " " );
-    Serial.print( String(channels[1]) + " " );
-    Serial.print( String(channels[3]) + " " );
-    Serial.println( String(channels[4]) + " " );
+    Serial.print( "CHANNEL_FRAME (" + String(length-3) + "): " );
+    dumpData( pData+3, length-3 );
+    Serial.print( String(channels.ch12) + " " );
+    Serial.print( String(channels.ch13) + " " );
+    Serial.print( String(channels.ch14) + " " );
+    Serial.println( String(channels.ch15) + " " );
 #endif
     return result;
 }
 
-bool crsf_telemetrie::readLinkStatistic( uint8_t* pData, size_t length )
+bool Crsf::getAngles( int16_t &i16Pan, int16_t &i16Tilt )
+{
+#define LOWTILT     (+0)    /* [degree * 0.1]*/
+#define HIGHTILT    (+900)
+#define LOWPAN      (-1800)
+#define HIGHPAN     (+1800)
+
+    int16_t i16NewPan = map(channels.ch14, CRSF_CHANNEL_VALUE_1000,CRSF_CHANNEL_VALUE_2000, LOWPAN, HIGHPAN ); 
+    int16_t i16NewTilt = map(channels.ch15, CRSF_CHANNEL_VALUE_1000,CRSF_CHANNEL_VALUE_2000, LOWTILT, HIGHTILT ); 
+
+    if( (i16NewPan != i16Pan) || (i16NewTilt != i16Tilt) )
+    {
+        i16Pan = i16NewPan;
+        i16Tilt = i16NewTilt;
+        return true;
+    }
+    return false;
+}
+
+bool Crsf::readLinkStatistic( uint8_t* pData, size_t length )
 {
     bool result = true;
 #if 0
@@ -213,7 +328,7 @@ bool crsf_telemetrie::readLinkStatistic( uint8_t* pData, size_t length )
     return result;
 }
 
-bool crsf_telemetrie::readOtxSync( uint8_t* pData, size_t length )
+bool Crsf::readOtxSync( uint8_t* pData, size_t length )
 {
     bool result = true;
 #if 0
@@ -223,7 +338,7 @@ bool crsf_telemetrie::readOtxSync( uint8_t* pData, size_t length )
     return result;
 }
 
-bool crsf_telemetrie::readRadioId( uint8_t* pData, size_t length )
+bool Crsf::readRadioId( uint8_t* pData, size_t length )
 {
     bool result = false;
 #if 1
@@ -233,7 +348,7 @@ bool crsf_telemetrie::readRadioId( uint8_t* pData, size_t length )
     return result;
 }
 
-bool crsf_telemetrie::readVario( uint8_t* pData, size_t length )
+bool Crsf::readVario( uint8_t* pData, size_t length )
 {
     bool result = false;
     i16altitude = (( pData[3]<<8 | pData[4] ) & 0xFFFF);
@@ -244,7 +359,7 @@ bool crsf_telemetrie::readVario( uint8_t* pData, size_t length )
     return result;
 }
 
-bool crsf_telemetrie::readBatterie( uint8_t* pData, size_t length )
+bool Crsf::readBatterie( uint8_t* pData, size_t length )
 {
     bool result = false;
 #if 0
@@ -254,7 +369,7 @@ bool crsf_telemetrie::readBatterie( uint8_t* pData, size_t length )
     return result;
 }
 
-bool crsf_telemetrie::readAttitude( uint8_t* pData, size_t length )
+bool Crsf::readAttitude( uint8_t* pData, size_t length )
 {
     bool result = false;
 #if 0
@@ -264,7 +379,7 @@ bool crsf_telemetrie::readAttitude( uint8_t* pData, size_t length )
     return result;
 }
 
-bool crsf_telemetrie::readFlightMode( uint8_t* pData, size_t length )
+bool Crsf::readFlightMode( uint8_t* pData, size_t length )
 {
     bool result = false;
 #if 0
@@ -275,9 +390,7 @@ bool crsf_telemetrie::readFlightMode( uint8_t* pData, size_t length )
 }
 
 
-
-
-bool crsf_telemetrie::getLatestGps( gps &p )
+bool Crsf::getLatestGps( gps &p )
 {
     bool result = bGpsUpdate;
     bGpsUpdate = false;

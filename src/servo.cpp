@@ -23,8 +23,8 @@ void servo::setup( bool bSimulation )
     PWM.setDuty( chTilt, 20000 );  // 20ms duty
 
     // Set initial servo position, or wait for more information?
-    //PWM.setMicroseconds( chPan, 1500 ); 
-    //PWM.setMicroseconds( chTilt, 1500 ); 
+    PWM.setMicroseconds( chPan, 1500 ); 
+    PWM.setMicroseconds( chTilt, 1500 ); 
 }
 
 void servo::loop( void )
