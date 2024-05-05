@@ -93,7 +93,7 @@ void loop()
     if( bAngleUpdate )
     {
       // correct / filter angles
-
+      // to do?
       
       Serial.println( " Pan / Tilt: " + String(i16Pan) + " / " + String(i16Tilt));
 

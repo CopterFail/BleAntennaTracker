@@ -194,6 +194,38 @@ bool Crsf::checkCrc( uint8_t* pData, size_t length )
 {
     bool result = true;
     //  if(CalcCRCMsp(&message[CRSF_TYPE_BYTE_MESSAGE_INDEX], message[CRSF_LENGTH_BYTE_MESSAGE_INDEX]-1) == message[message[CRSF_LENGTH_BYTE_MESSAGE_INDEX]+1]) {
+
+/*
+STATIC_UNIT_TESTED uint8_t crsfFrameCRC(void)
+{
+    // CRC includes type and payload
+    uint8_t crc = crc8_dvb_s2(0, crsfFrame.frame.type);
+    for (int ii = 0; ii < crsfFrame.frame.frameLength - CRSF_FRAME_LENGTH_TYPE_CRC; ++ii) {
+        crc = crc8_dvb_s2(crc, crsfFrame.frame.payload[ii]);
+    }
+    return crc;
+
+
+    uint8_t crc8_dvb_s2(uint8_t crc, unsigned char a)
+{
+    crc ^= a;
+    for (int ii = 0; ii < 8; ++ii) {
+        if (crc & 0x80) {
+            crc = (crc << 1) ^ 0xD5;
+        } else {
+            crc = crc << 1;
+        }
+    }
+    return crc;
+}
+
+            const uint8_t crc = crsfFrameCRC();
+            if (crc != crsfFrame.frame.payload[CRSF_FRAME_RC_CHANNELS_PAYLOAD_SIZE]) {
+                return RX_FRAME_PENDING;
+            }
+}*/
+
+
     return result;
 }
 
@@ -308,6 +340,11 @@ bool Crsf::getAngles( int16_t &i16Pan, int16_t &i16Tilt )
 
     int16_t i16NewPan = map(channels.ch14, CRSF_CHANNEL_VALUE_1000,CRSF_CHANNEL_VALUE_2000, LOWPAN, HIGHPAN ); 
     int16_t i16NewTilt = map(channels.ch15, CRSF_CHANNEL_VALUE_1000,CRSF_CHANNEL_VALUE_2000, LOWTILT, HIGHTILT ); 
+
+    if( i16NewPan > HIGHPAN) i16NewPan = HIGHPAN;
+    if( i16NewPan < LOWPAN) i16NewPan = LOWPAN;
+    if( i16NewTilt > HIGHTILT) i16NewTilt = HIGHTILT;
+    if( i16NewTilt < LOWTILT) i16NewTilt = LOWTILT;
 
     if( (i16NewPan != i16Pan) || (i16NewTilt != i16Tilt) )
     {

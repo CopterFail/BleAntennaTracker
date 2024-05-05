@@ -13,6 +13,7 @@
 //#define FAST_FACTOR (2)       // 1/8 steps instead of 1/16 - works well
 #define FAST_FACTOR (2)       // 1/8 steps instead of 1/16 - test
 #define MIN_INTERVAL  10000   // 100 Hz call frequency for new stepper values
+#define MAX_INTERVAL  2000000 // upper limit for new stepper values
 #define MIN_ISR_TIME  125     // 8000 Hz interrupt should be fast enougth
 #define MAX_ISR_TIME  10000   // 100 Hz interrupt
 #define INDEX_SIZE    (110)   // size is 230 ... 210 not symetrically
@@ -250,6 +251,9 @@ void stepper::setStepper( int16_t i16NewAngValue )
   u32last = u32now;
   if( u32setpointInterval < MIN_INTERVAL ){
       u32setpointInterval = MIN_INTERVAL;
+  }
+  if( u32setpointInterval > MAX_INTERVAL ){
+      u32setpointInterval = MAX_INTERVAL;
   }
 
   i16AngSetpoint = i16NewAngValue;

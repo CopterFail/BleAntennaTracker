@@ -58,7 +58,7 @@
 #define DIR_PIN             0    // direction
 //#define SPREAD_PIN          7    // pull down for stealth shop, always low, 20 is rx, 21 tx
 #define MS1_PIN             2    // micro steps, 1-1 for 1/16, 0-0 for 1/8 , so it can drive both pins
-//#define MS2_PIN             5    // micro steps
+//#define MS2_PIN             5    // micro steps, connected to MS1_PIN
 //#define ENABLE_PIN          20   // pull down to enable, always low
 #define DIAG_PIN            5    // Diag signal from tmc2209
 //#define IDX_PIN             21    // Index pin from tmc2209
