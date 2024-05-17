@@ -43,8 +43,8 @@
 #ifdef PLATFORM_ESP32_C3 
 // see also: https://www.sudo.is/docs/esphome/boards/esp32c3supermini/
 //button.cpp:
-#define BLUE_BUTTON_PIN     6
-#define RED_BUTTON_PIN      7
+#define BLUE_BUTTON_PIN     6   // use internal pull up, use GND from e.g. xt30
+#define RED_BUTTON_PIN      7   // use internal pull up, use GND from e.g. xt30
 
 //led.cpp
 #define LED_PIN             8   // pin 8 is also used by the blue status led
@@ -56,19 +56,19 @@
 // stepper.cpp, Stepper pin definitions
 #define STEP_PIN            1    // step
 #define DIR_PIN             0    // direction
-//#define SPREAD_PIN          7    // pull down for stealth shop, always low, 20 is rx, 21 tx
-#define MS1_PIN             2    // micro steps, 1-1 for 1/16, 0-0 for 1/8 , so it can drive both pins
-//#define MS2_PIN             5    // micro steps, connected to MS1_PIN
-//#define ENABLE_PIN          20   // pull down to enable, always low
+//#define SPREAD_PIN        // pull down for stealth shop, always low
+#define MS1_PIN             2    // micro steps, 1-1 for 1/16, 0-0 for 1/8 , so it drives both pins
+//#define MS2_PIN           // see MS1  
+//#define ENABLE_PIN        // pull down to enable, always low
 #define DIAG_PIN            5    // Diag signal from tmc2209
-//#define IDX_PIN             21    // Index pin from tmc2209
+//#define IDX_PIN           // Index pin from tmc2209
 #define INDEX_PIN           10   // hall sensor input (internal pullup needed)
 
-#define POTIPIN             4   // pin 4 is analog input adc1
-#define AKKUPIN             3   // pin 3 is analog input adc1, pin 5 is analog input adc2 - does not work
+#define POTIPIN             4   // pin 4 is analog input adc1, 4 x connector: 5V0, GND, 3V3, POTI
+#define AKKUPIN             3   // pin 3 is analog input adc1 (pin 5 does not work here)
 
-#define RX_PIN              20
-#define TX_PIN              21
+#define RX_PIN              20  // connected to elrs receiver tx
+#define TX_PIN              21  // connected to elrs receiver rx
 
 #endif //platform
 
