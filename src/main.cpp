@@ -5,10 +5,6 @@
 
 #include <Arduino.h>
 
-#define _USE_BLE_ 0 //Compile switch, 1 to use BLE or 0 use ELRS instead
-
-//#include "BLEDevice.h"
-//#include "BLE_client.h"
 #include "tracker.h"
 #include "led.h"
 #include "servo.h"
@@ -48,34 +44,12 @@ void setup()
   Serial.println("... End of setup");
 }
 
-
 void loop() 
 {
   bool bConnected = false;
   bool bTracker = false;
   bool bAngleUpdate = false;
   
-#if _USE_BLE_ 
-  /*
-  Operation:
-  1. Connect BLE to transmitter with pull 2305 modified SW , BLE need some delay()
-  2. Get GPS by the received telemetrie (BLE, tracker, gps)
-  3. Calculate pan / tilt angle (mytracker)
-  4. Correct / filter angles
-  5. Set outputs ( led, stepper, servo )
-  */
-  delay(50);
-  bConnected = BLE_loop();
-  if( bConnected )
-  {
-      bTracker = mytracker.loop();
-      if( bTracker )
-      {
-          myservo.setServos( +1 * mytracker.getPan(), mytracker.getTilt() );
-          mystepper.setStepper( -1 * mytracker.getPan() );
-      }
-  }
-#else
   /*
   Operation:
   1. Connect ELRS 2nd receiver, telemetrie is disabled, regular SW is used
@@ -103,8 +77,6 @@ void loop()
     }
 
   }
-#endif
-
 
   myled.setState( LED_BLE, bConnected ? STATUS_OK : STATUS_WAIT);
   myled.setState( LED_TRACKER, bTracker ? STATUS_OK : STATUS_WAIT ); 
