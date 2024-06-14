@@ -139,7 +139,7 @@ bool stepper::findIndex( void )
     //iMinIsrTime = 4 * MIN_ISR_TIME;
     for( int i=0; (i<(STEP_LIMIT*2)) && (bIndexFound == false); i+=60 ){
       iStepperPos = 0;
-      setStepper( 60 );
+      setStepper( -60 );
       loop();
       delay( 50 );
     }

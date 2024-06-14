@@ -98,8 +98,8 @@ void loop()
       Serial.println( " Pan / Tilt: " + String(i16Pan) + " / " + String(i16Tilt));
 
       // set outputs
-      myservo.setServos( +1 * i16Pan, i16Tilt );
-      mystepper.setStepper( -1 * i16Pan );
+      myservo.setServos( i16Pan, i16Tilt );
+      mystepper.setStepper( i16Pan );
     }
 
   }
