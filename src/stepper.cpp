@@ -14,9 +14,12 @@
 #define FAST_FACTOR (2)       // 1/8 steps instead of 1/16 - test
 #define MIN_INTERVAL  10000   // 100 Hz call frequency for new stepper values
 #define MAX_INTERVAL  2000000 // upper limit for new stepper values
-#define MIN_ISR_TIME  125     // 8000 Hz interrupt should be fast enougth
+#define MIN_ISR_TIME  234 //125     // 8000 Hz interrupt should be fast enougth
 #define MAX_ISR_TIME  10000   // 100 Hz interrupt
 #define INDEX_SIZE    (110)   // size is 230 ... 210 not symetrically
+
+// speed of pan degree/s: 360 degree / 3s = STEP_LIMIT * FAST_FACTOR / 3s 
+// and to calculate ISR_TIME = 3s/ (STEP_LIMIT * FAST_FACTOR) = 234us , this is used now for MIN_ISR_TIME
 
 volatile int iStepperPos = 0;
 volatile int iStepperSet = 0;
@@ -139,7 +142,7 @@ bool stepper::findIndex( void )
     //iMinIsrTime = 4 * MIN_ISR_TIME;
     for( int i=0; (i<(STEP_LIMIT*2)) && (bIndexFound == false); i+=60 ){
       iStepperPos = 0;
-      setStepper( -60 );
+      setStepper( +60 );
       loop();
       delay( 50 );
     }
